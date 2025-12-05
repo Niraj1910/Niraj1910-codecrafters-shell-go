@@ -4,7 +4,6 @@ import (
 	"bufio"
 	"fmt"
 	"os"
-	"strings"
 )
 
 // Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
@@ -18,7 +17,7 @@ func main() {
 
 		command, err := bufio.NewReader(os.Stdin).ReadString('\n')
 
-		command = strings.TrimSpace(command)
+		// command = strings.TrimSpace(command)
 
 		if command == "exist" {
 			break
