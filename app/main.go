@@ -19,7 +19,7 @@ func main() {
 
 		// command = strings.TrimSpace(command)
 
-		if command == "exist" {
+		if command == "exit" {
 			break
 		}
 
