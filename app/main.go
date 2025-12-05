@@ -17,17 +17,16 @@ func main() {
 		fmt.Print("$ ")
 
 		command, err := bufio.NewReader(os.Stdin).ReadString('\n')
+		if err != nil {
+			fmt.Printf("cound not read the command: %s", err)
+		}
 
 		command = strings.TrimSpace(command)
-		// fmt.Println(len(command))
-		// fmt.Println(command)
+		fmt.Println(len(command))
+		fmt.Println(command)
 
 		if command == "exit" {
 			break
-		}
-
-		if err != nil {
-			fmt.Printf("cound not read the command: %s", err)
 		}
 
 		fmt.Println(command + ": command not found")
