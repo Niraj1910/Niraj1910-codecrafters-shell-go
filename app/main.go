@@ -28,12 +28,11 @@ func main() {
 
 		command, argument := getCmdAndArg(input)
 
-		switch command {
-		case "exit":
+		if command == "exit" {
 			return
-		case "echo":
+		} else if command == "echo" {
 			fmt.Println(argument)
-		default:
+		} else {
 			fmt.Println(command + ": command not found")
 		}
 	}
