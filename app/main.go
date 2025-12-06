@@ -15,6 +15,17 @@ func getCmdAndArg(input string) (string, string) {
 	return cmd, arg
 }
 
+func isBuiltInCmds(cmd string) string {
+	builtInCommands := []string{"type", "echo", "exit"}
+
+	for _, elem := range builtInCommands {
+		if cmd == elem {
+			return fmt.Sprintf("%s is a shell builtin", cmd)
+		}
+	}
+	return fmt.Sprintf("%s invalid command", cmd)
+}
+
 func main() {
 	// TODO: Uncomment the code below to pass the first stage
 
@@ -30,10 +41,13 @@ func main() {
 		command, argument := getCmdAndArg(input)
 
 		switch command {
-		case "exit":
-			return
+		case "type":
+			output := isBuiltInCmds(argument)
+			fmt.Println(output)
 		case "echo":
 			fmt.Println(argument)
+		case "exit":
+			return
 		default:
 			fmt.Println(command + ": command not found")
 		}
