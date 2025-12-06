@@ -23,7 +23,7 @@ func isBuiltInCmds(cmd string) string {
 			return fmt.Sprintf("%s is a shell builtin", cmd)
 		}
 	}
-	return fmt.Sprintf("%s invalid command", cmd)
+	return fmt.Sprintf("%s not found", cmd)
 }
 
 func main() {
