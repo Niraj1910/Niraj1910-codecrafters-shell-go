@@ -25,14 +25,16 @@ func main() {
 		if err != nil {
 			fmt.Printf("cound not read the command: %s", err)
 		}
+		input = strings.TrimSpace(input)
 
 		command, argument := getCmdAndArg(input)
 
-		if command == "exit" {
+		switch command {
+		case "exit":
 			return
-		} else if command == "echo" {
+		case "echo":
 			fmt.Println(argument)
-		} else {
+		default:
 			fmt.Println(command + ": command not found")
 		}
 	}
