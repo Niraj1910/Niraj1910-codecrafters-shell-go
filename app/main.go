@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"strings"
 )
 
@@ -15,15 +16,33 @@ func getCmdAndArg(input string) (string, string) {
 	return cmd, arg
 }
 
-func isBuiltInCmds(cmd string) string {
+func isBuiltInCmds(arg string) string {
 	builtInCommands := []string{"type", "echo", "exit"}
 
+	// check for builtin commands
 	for _, elem := range builtInCommands {
-		if cmd == elem {
-			return fmt.Sprintf("%s is a shell builtin", cmd)
+		if arg == elem {
+			return fmt.Sprintf("%s is a shell builtin", arg)
 		}
 	}
-	return fmt.Sprintf("%s not found", cmd)
+
+	// check for executable files
+	path := os.Getenv("PATH")
+	dirs := strings.Split(path, ":")
+
+	for _, dir := range dirs {
+		fullPath := filepath.Join(dir, arg)
+		fileInfo, err := os.Stat(fullPath)
+		if err == nil && !fileInfo.IsDir() {
+			mode := fileInfo.Mode()
+			// check execute permission
+			if mode&0111 != 0 {
+				return fmt.Sprintf("%s is %s", arg, fullPath)
+			}
+		}
+	}
+
+	return fmt.Sprintf("%s not found", arg)
 }
 
 func main() {
