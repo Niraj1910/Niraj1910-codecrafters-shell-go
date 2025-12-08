@@ -89,14 +89,14 @@ func main() {
 
 		default:
 
-			executableFile, found := findExecutable(command)
+			_, found := findExecutable(command)
 
 			if !found {
 				fmt.Println(command + ": command not found")
 				continue
 			}
 
-			cmd := exec.Command(executableFile, arguments...)
+			cmd := exec.Command(command, arguments...)
 			cmd.Stdin = os.Stdin
 			cmd.Stdout = os.Stdout
 			cmd.Stderr = os.Stderr
