@@ -91,7 +91,6 @@ func main() {
 
 			executableFile, found := findExecutable(command)
 
-			fmt.Printf("Program was passed %d args (including program name).\n", len(arguments)+1)
 			if !found {
 				fmt.Println(command + ": command not found")
 				continue
