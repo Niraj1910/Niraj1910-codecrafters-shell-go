@@ -23,7 +23,7 @@ func parseInput(input string) (string, []string) {
 
 func findExecutable(cmd string) (string, bool) {
 	path := os.Getenv("PATH")        // get the full path
-	dirs := strings.Split(path, " ") // get the all dirs
+	dirs := strings.Split(path, ":") // get the all dirs
 
 	for _, dir := range dirs {
 		fullPath := filepath.Join(dir, cmd)
