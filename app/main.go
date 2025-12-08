@@ -25,13 +25,9 @@ func findExecutable(cmd string) (string, bool) {
 	path := os.Getenv("PATH")        // get the full path
 	dirs := strings.Split(path, ":") // get the all dirs
 
-	fmt.Println("cmd -> ", cmd)
-
 	for _, dir := range dirs {
 		fullPath := filepath.Join(dir, cmd)
-		fmt.Println("fullpath -> ", fullPath)
 		info, err := os.Stat(fullPath)
-		fmt.Println("info -> ", info)
 		if err == nil && !info.IsDir() && info.Mode()&0111 != 0 {
 			return fullPath, true
 		}
@@ -106,6 +102,7 @@ func main() {
 			cmd.Stderr = os.Stderr
 
 			cmd.Run()
+			fmt.Printf("Program was passed %n args (including program name).", len(arguments)+1)
 
 		}
 	}
