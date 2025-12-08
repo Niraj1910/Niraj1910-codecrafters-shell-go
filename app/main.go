@@ -87,7 +87,8 @@ func main() {
 			fmt.Println(strings.Join(arguments, " "))
 
 		case "pwd":
-			fmt.Println(commandInfo(command))
+			dir, _ := os.Getwd()
+			fmt.Println(dir)
 
 		case "exit":
 			return
