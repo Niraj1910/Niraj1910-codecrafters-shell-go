@@ -82,7 +82,7 @@ func main() {
 			fmt.Println(output)
 
 		case "echo":
-			fmt.Println(arguments)
+			fmt.Println(strings.Join(arguments, " "))
 
 		case "exit":
 			return
@@ -91,6 +91,7 @@ func main() {
 
 			executableFile, found := findExecutable(command)
 
+			fmt.Printf("Program was passed %d args (including program name).\n", len(arguments)+1)
 			if !found {
 				fmt.Println(command + ": command not found")
 				continue
@@ -102,7 +103,6 @@ func main() {
 			cmd.Stderr = os.Stderr
 
 			cmd.Run()
-			fmt.Printf("Program was passed %n args (including program name).", len(arguments)+1)
 
 		}
 	}
