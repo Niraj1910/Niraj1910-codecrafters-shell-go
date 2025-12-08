@@ -27,6 +27,7 @@ func findExecutable(cmd string) (string, bool) {
 
 	for _, dir := range dirs {
 		fullPath := filepath.Join(dir, cmd)
+		fmt.Println(fullPath)
 		info, err := os.Stat(fullPath)
 		if err == nil && !info.IsDir() && info.Mode()&0111 != 0 {
 			return fullPath, true
