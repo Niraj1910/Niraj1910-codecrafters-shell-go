@@ -11,42 +11,50 @@ import (
 // Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
 var _ = fmt.Print
 
-func getCmdAndArg(input string) (string, string) {
-	cmd, arg, _ := strings.Cut(input, " ")
-	return cmd, arg
+func parseInput(input string) (string, []string) {
+	parts := strings.Fields(input)
+
+	if len(parts) == 0 {
+		return "", nil
+	}
+	return parts[0], parts[1:]
 }
 
-func isBuiltInCmds(arg string) string {
+func findExecutable(cmd string) (string, bool) {
+	path := os.Getenv("PATH")        // get the full path
+	dirs := strings.Split(path, " ") // get the all dirs
+
+	for _, dir := range dirs {
+		fullPath := filepath.Join(dir, cmd)
+		info, err := os.Stat(fullPath)
+		if err != nil && !info.IsDir() && info.Mode().Perm()&0111 != 0 {
+			return fullPath, true
+		}
+	}
+
+	return "", false
+}
+
+func isBuiltInCmds(args []string) string {
 	builtInCommands := []string{"type", "echo", "exit"}
 
 	// check for builtin commands
 	for _, elem := range builtInCommands {
-		if arg == elem {
-			return fmt.Sprintf("%s is a shell builtin", arg)
+		if args[0] == elem {
+			return fmt.Sprintf("%s is a shell builtin", args)
 		}
 	}
 
 	// check for executable files
-	path := os.Getenv("PATH")
-	dirs := strings.Split(path, ":")
-
-	for _, dir := range dirs {
-		fullPath := filepath.Join(dir, arg)
-		fileInfo, err := os.Stat(fullPath)
-		if err == nil && !fileInfo.IsDir() {
-			mode := fileInfo.Mode()
-			// check execute permission
-			if mode&0111 != 0 {
-				return fmt.Sprintf("%s is %s", arg, fullPath)
-			}
-		}
+	fullPath, found := findExecutable(args[0])
+	if found {
+		return fmt.Sprintf("%s is %s", args[0], fullPath)
 	}
 
-	return fmt.Sprintf("%s not found", arg)
+	return fmt.Sprintf("%s not found", args[0])
 }
 
 func main() {
-	// TODO: Uncomment the code below to pass the first stage
 
 	for {
 		fmt.Print("$ ")
@@ -57,14 +65,14 @@ func main() {
 		}
 		input = strings.TrimSpace(input)
 
-		command, argument := getCmdAndArg(input)
+		command, arguments := parseInput(input)
 
 		switch command {
 		case "type":
-			output := isBuiltInCmds(argument)
+			output := isBuiltInCmds(arguments)
 			fmt.Println(output)
 		case "echo":
-			fmt.Println(argument)
+			fmt.Println(arguments)
 		case "exit":
 			return
 		default:
