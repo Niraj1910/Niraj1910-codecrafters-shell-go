@@ -90,6 +90,9 @@ func main() {
 		default:
 
 			executableFile, found := findExecutable(command)
+
+			fmt.Println(executableFile, " -> executable file")
+
 			if !found {
 				fmt.Println(command + ": command not found")
 				continue
