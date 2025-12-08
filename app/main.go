@@ -42,6 +42,7 @@ func isBuiltin(cmd string) bool {
 		"type": true,
 		"echo": true,
 		"exit": true,
+		"pwd":  true,
 	}
 	return builtins[cmd]
 }
@@ -86,8 +87,7 @@ func main() {
 			fmt.Println(strings.Join(arguments, " "))
 
 		case "pwd":
-			dir, _ := os.Getwd()
-			fmt.Println(dir)
+			fmt.Println(commandInfo(command))
 
 		case "exit":
 			return
