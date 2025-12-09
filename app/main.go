@@ -131,7 +131,7 @@ func main() {
 
 			var result string
 			quotIsClosed := true
-			checkForSpace := true
+			checkForSpace := false
 			for _, w := range arg {
 
 				if w == "'" {
