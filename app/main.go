@@ -96,13 +96,15 @@ func main() {
 				continue
 			}
 			target := arguments[0]
-			if !strings.HasPrefix(target, "/") {
-				fmt.Printf("cd: %s no such file or directory \n", target)
+
+			if !filepath.IsAbs(target) {
+				cwd, _ := os.Getwd()
+				target = filepath.Join(target, cwd)
 			}
 
 			err := os.Chdir(target)
 			if err != nil {
-				fmt.Printf("cd: %s: No such file or directory \n", target)
+				fmt.Printf("cd: %s: No such file or directory", target)
 			}
 
 		case "exit":
