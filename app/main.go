@@ -97,12 +97,20 @@ func main() {
 			}
 			target := arguments[0]
 
-			// re
+			// ~ (tilde) for Home directory
+			if target == "~" {
+				home, _ := os.UserHomeDir()
+				fmt.Printf("cd: %s: No such file or directory\n", target)
+				target = home
+			}
+
+			// if relative path, join it with the current working directory
 			if !filepath.IsAbs(target) {
 				cwd, _ := os.Getwd()
 				target = filepath.Join(cwd, target)
 			}
 
+			// change directory
 			err := os.Chdir(target)
 			if err != nil {
 				fmt.Printf("cd: %s: No such file or directory \n", target)
