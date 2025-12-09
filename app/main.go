@@ -97,9 +97,10 @@ func main() {
 			}
 			target := arguments[0]
 
+			// re
 			if !filepath.IsAbs(target) {
 				cwd, _ := os.Getwd()
-				target = filepath.Join(target, cwd)
+				target = filepath.Join(cwd, target)
 			}
 
 			err := os.Chdir(target)
