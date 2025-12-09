@@ -61,6 +61,38 @@ func commandInfo(cmd string) string {
 	return fmt.Sprintf("%s not found", cmd)
 }
 
+func changeDirs(target string) string {
+	// ~ (tilde) for Home directory
+	if target == "~" {
+		home, err := os.UserHomeDir()
+		if err != nil {
+			fmt.Printf("cd: %s: No such file or directory\n", target)
+		}
+		target = home
+	}
+
+	// Convert relative paths to absolute
+	absPath, err := filepath.Abs(target)
+	if err != nil {
+		return fmt.Sprintf("cd: %s: No such file or directory\n", target)
+
+	}
+
+	// check if the path exists and is a driectory
+	info, err := os.Stat(absPath)
+	if err != nil || !info.IsDir() {
+		return fmt.Sprintf("cd: %s: No such file or directory\n", target)
+
+	}
+
+	// change directory
+	err = os.Chdir(absPath)
+	if err != nil {
+		return fmt.Sprintf("cd: %s: No such file or directory \n", target)
+	}
+	return ""
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -72,10 +104,10 @@ func main() {
 			fmt.Printf("cound not read the command: %s", err)
 			continue
 		}
-		line = strings.TrimSpace(line)
-		if line == "" {
-			continue
-		}
+		// line = strings.TrimSpace(line)
+		// if line == "" {
+		// 	continue
+		// }
 
 		command, arguments := parseInput(line)
 
@@ -85,7 +117,7 @@ func main() {
 			fmt.Println(output)
 
 		case "echo":
-			fmt.Println(strings.Join(arguments, ""))
+			fmt.Println(strings.Join(arguments, " "))
 
 		case "pwd":
 			cwd, _ := os.Getwd()
@@ -96,40 +128,12 @@ func main() {
 				continue
 			}
 			target := arguments[0]
-
-			// ~ (tilde) for Home directory
-			if target == "~" {
-				home, err := os.UserHomeDir()
-				if err != nil {
-					fmt.Printf("cd: %s: No such file or directory\n", target)
-				}
-				target = home
-			}
-
-			// if relative path, join it with the current working directory
-			absPath, err := filepath.Abs(target)
-			if err != nil {
-				fmt.Printf("cd: %s: No such file or directory\n", target)
-				continue
-			}
-
-			info, err := os.Stat(absPath)
-			if err != nil || !info.IsDir() {
-				fmt.Printf("cd: %s: No such file or directory\n", target)
-				continue
-			}
-
-			// change directory
-			err = os.Chdir(absPath)
-			if err != nil {
-				fmt.Printf("cd: %s: No such file or directory \n", target)
-			}
+			fmt.Println(changeDirs(target))
 
 		case "exit":
 			return
 
 		default:
-
 			_, found := findExecutable(command)
 
 			if !found {
