@@ -107,13 +107,20 @@ func main() {
 			}
 
 			// if relative path, join it with the current working directory
-			if !filepath.IsAbs(target) {
-				cwd, _ := os.Getwd()
-				target = filepath.Join(cwd, target)
+			absPath, err := filepath.Abs(target)
+			if err != nil {
+				fmt.Printf("cd: %s: No such file or directory\n", target)
+				continue
+			}
+
+			info, err := os.Stat(absPath)
+			if err != nil || !info.IsDir() {
+				fmt.Printf("cd: %s: No such file or directory\n", target)
+				continue
 			}
 
 			// change directory
-			err := os.Chdir(target)
+			err = os.Chdir(absPath)
 			if err != nil {
 				fmt.Printf("cd: %s: No such file or directory \n", target)
 			}
