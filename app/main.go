@@ -104,7 +104,7 @@ func main() {
 
 			err := os.Chdir(target)
 			if err != nil {
-				fmt.Printf("cd: %s: No such file or directory", target)
+				fmt.Printf("cd: %s: No such file or directory \n", target)
 			}
 
 		case "exit":
