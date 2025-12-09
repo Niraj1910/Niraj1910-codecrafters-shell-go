@@ -99,8 +99,10 @@ func main() {
 
 			// ~ (tilde) for Home directory
 			if target == "~" {
-				home, _ := os.UserHomeDir()
-				fmt.Printf("cd: %s: No such file or directory\n", target)
+				home, err := os.UserHomeDir()
+				if err != nil {
+					fmt.Printf("cd: %s: No such file or directory\n", target)
+				}
 				target = home
 			}
 
