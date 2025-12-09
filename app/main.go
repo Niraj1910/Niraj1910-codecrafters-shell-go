@@ -43,6 +43,7 @@ func isBuiltin(cmd string) bool {
 		"echo": true,
 		"exit": true,
 		"pwd":  true,
+		"cd":   true,
 	}
 	return builtins[cmd]
 }
@@ -87,8 +88,22 @@ func main() {
 			fmt.Println(strings.Join(arguments, " "))
 
 		case "pwd":
-			dir, _ := os.Getwd()
-			fmt.Println(dir)
+			cwd, _ := os.Getwd()
+			fmt.Println(cwd)
+
+		case "cd":
+			if len(arguments) == 0 {
+				continue
+			}
+			target := arguments[0]
+			if !strings.HasPrefix(target, "/") {
+				fmt.Printf("cd: %s no such file or directory \n", target)
+			}
+
+			err := os.Chdir(target)
+			if err != nil {
+				fmt.Printf("cd: %s: No such file or directory", target)
+			}
 
 		case "exit":
 			return
