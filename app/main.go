@@ -155,8 +155,7 @@ func main() {
 					checkForSpace = false
 				}
 			}
-
-			fmt.Println(result)
+			fmt.Print(result + "\n")
 
 		case "pwd":
 			cwd, _ := os.Getwd()
