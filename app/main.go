@@ -13,12 +13,18 @@ import (
 var _ = fmt.Print
 
 func parseInput(input string) (string, []string) {
-	parts := strings.Fields(input)
+
+	tempCopy := input
+	parts := strings.Fields(tempCopy)
+
+	args := strings.SplitAfter(input, parts[0])
+
+	// args[0] = strings.Trim(args[0], "[] ")
 
 	if len(parts) == 0 {
 		return "", nil
 	}
-	return parts[0], parts[1:]
+	return args[0], args[1:]
 }
 
 func findExecutable(cmd string) (string, bool) {
@@ -117,7 +123,40 @@ func main() {
 			fmt.Println(output)
 
 		case "echo":
-			fmt.Println(strings.Join(arguments, " "))
+			fmt.Println("arguments -> ", arguments)
+
+			arg := strings.Split(arguments[0], "")
+
+			fmt.Println(arg)
+
+			var result string
+			quotIsClosed := true
+			checkForSpace := true
+			for _, w := range arg {
+
+				if w == "'" {
+
+					if quotIsClosed {
+						quotIsClosed = false
+						continue
+					} else {
+						quotIsClosed = true
+						continue
+					}
+				}
+
+				if !quotIsClosed {
+					result += w
+				} else if w != " " {
+					result += w
+					checkForSpace = true
+				} else if checkForSpace {
+					result += " "
+					checkForSpace = false
+				}
+			}
+
+			fmt.Println("result -> ", result)
 
 		case "pwd":
 			cwd, _ := os.Getwd()
