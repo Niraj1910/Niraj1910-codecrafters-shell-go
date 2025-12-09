@@ -123,11 +123,11 @@ func main() {
 			fmt.Println(output)
 
 		case "echo":
-			fmt.Println("arguments -> ", arguments)
+			// fmt.Println("arguments -> ", arguments)
 
 			arg := strings.Split(arguments[0], "")
 
-			fmt.Println(arg)
+			// fmt.Println(arg)
 
 			var result string
 			quotIsClosed := true
@@ -156,7 +156,7 @@ func main() {
 				}
 			}
 
-			fmt.Println("result -> ", result)
+			fmt.Println(result)
 
 		case "pwd":
 			cwd, _ := os.Getwd()
