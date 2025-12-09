@@ -85,7 +85,7 @@ func main() {
 			fmt.Println(output)
 
 		case "echo":
-			fmt.Println(strings.Join(arguments, " "))
+			fmt.Println(strings.Join(arguments, ""))
 
 		case "pwd":
 			cwd, _ := os.Getwd()
