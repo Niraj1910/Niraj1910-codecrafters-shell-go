@@ -9,9 +9,6 @@ import (
 	"strings"
 )
 
-// Ensures gofmt doesn't remove the "fmt" import in stage 1 (feel free to remove this!)
-var _ = fmt.Print
-
 func parseInput(input string) (string, []string) {
 
 	tempCopy := input
@@ -99,6 +96,40 @@ func changeDirs(target string) string {
 	return ""
 }
 
+func parseSingleQuoteArgs(input string) []string {
+	args := []string{}
+	var curr strings.Builder
+	isQoute := false
+
+	for i := 0; i < len(input); i++ {
+
+		ch := input[i]
+		if ch == '\'' {
+			isQoute = !isQoute
+			continue
+		}
+
+		if !isQoute {
+
+			if ch == ' ' || ch == '\t' {
+				if curr.Len() > 0 {
+					args = append(args, curr.String())
+					curr.Reset()
+				}
+				continue
+			}
+		}
+
+		curr.WriteByte(input[i])
+	}
+
+	if curr.Len() > 0 {
+		args = append(args, curr.String())
+		curr.Reset()
+	}
+	return args
+}
+
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -123,39 +154,9 @@ func main() {
 			fmt.Println(output)
 
 		case "echo":
-			// fmt.Println("arguments -> ", arguments)
-
-			arg := strings.Split(arguments[0], "")
-
-			// fmt.Println(arg)
-
-			var result string
-			quotIsClosed := true
-			checkForSpace := false
-			for _, w := range arg {
-
-				if w == "'" {
-
-					if quotIsClosed {
-						quotIsClosed = false
-						continue
-					} else {
-						quotIsClosed = true
-						continue
-					}
-				}
-
-				if !quotIsClosed {
-					result += w
-				} else if w != " " {
-					result += w
-					checkForSpace = true
-				} else if checkForSpace {
-					result += " "
-					checkForSpace = false
-				}
-			}
-			fmt.Print(result)
+			raw := strings.TrimSpace(line[len("echo"):])
+			args := parseSingleQuoteArgs(raw)
+			fmt.Println(strings.Join(args, " "))
 
 		case "pwd":
 			cwd, _ := os.Getwd()
