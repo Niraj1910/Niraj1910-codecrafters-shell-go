@@ -9,19 +9,37 @@ import (
 	"strings"
 )
 
-func parseInput(input string) (string, []string) {
+func parseTokens(input string) []string {
 
-	tempCopy := input
-	parts := strings.Fields(tempCopy)
+	args := []string{}
+	var curr strings.Builder
+	isQuote := false
+	for i := 0; i < len(input); i++ {
+		ch := input[i]
 
-	args := strings.SplitAfter(input, parts[0])
+		if ch == ' ' || ch == '\r' {
+			continue
+		}
 
-	// args[0] = strings.Trim(args[0], "[] ")
+		if ch == '\'' {
+			isQuote = !isQuote
+			continue
+		}
+		if !isQuote && (ch == ' ' || ch == '\t') {
+			if curr.Len() > 0 {
+				args = append(args, curr.String())
+				curr.Reset()
+			}
+			continue
+		}
 
-	if len(parts) == 0 {
-		return "", nil
+		curr.WriteByte(ch)
 	}
-	return args[0], args[1:]
+	if curr.Len() > 0 {
+		args = append(args, curr.String())
+		curr.Reset()
+	}
+	return args
 }
 
 func findExecutable(cmd string) (string, bool) {
@@ -96,40 +114,6 @@ func changeDirs(target string) string {
 	return ""
 }
 
-func parseSingleQuoteArgs(input string) []string {
-	args := []string{}
-	var curr strings.Builder
-	isQoute := false
-
-	for i := 0; i < len(input); i++ {
-
-		ch := input[i]
-		if ch == '\'' {
-			isQoute = !isQoute
-			continue
-		}
-
-		if !isQoute {
-
-			if ch == ' ' || ch == '\t' {
-				if curr.Len() > 0 {
-					args = append(args, curr.String())
-					curr.Reset()
-				}
-				continue
-			}
-		}
-
-		curr.WriteByte(input[i])
-	}
-
-	if curr.Len() > 0 {
-		args = append(args, curr.String())
-		curr.Reset()
-	}
-	return args
-}
-
 func main() {
 	reader := bufio.NewReader(os.Stdin)
 
@@ -141,12 +125,15 @@ func main() {
 			fmt.Printf("cound not read the command: %s", err)
 			continue
 		}
-		// line = strings.TrimSpace(line)
-		// if line == "" {
-		// 	continue
-		// }
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
 
-		command, arguments := parseInput(line)
+		// command, arguments := parseInput(line)
+		tokens := parseTokens(line)
+		command := tokens[0]
+		arguments := tokens[1:]
 
 		switch command {
 		case "type":
@@ -154,9 +141,9 @@ func main() {
 			fmt.Println(output)
 
 		case "echo":
-			raw := strings.TrimSpace(line[len("echo"):])
-			args := parseSingleQuoteArgs(raw)
-			fmt.Println(strings.Join(args, " "))
+			// raw := strings.TrimSpace(line[len("echo"):])
+			// args := parseSingleQuoteArgs(raw)
+			fmt.Println(strings.Join(arguments, " "))
 
 		case "pwd":
 			cwd, _ := os.Getwd()
