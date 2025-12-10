@@ -141,8 +141,6 @@ func main() {
 			fmt.Println(output)
 
 		case "echo":
-			// raw := strings.TrimSpace(line[len("echo"):])
-			// args := parseSingleQuoteArgs(raw)
 			fmt.Println(strings.Join(arguments, " "))
 
 		case "pwd":
@@ -154,7 +152,8 @@ func main() {
 				continue
 			}
 			target := arguments[0]
-			fmt.Println(changeDirs(target))
+			changeDirs(target)
+			continue
 
 		case "exit":
 			return
