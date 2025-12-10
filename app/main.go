@@ -154,8 +154,8 @@ func main() {
 			fmt.Println(output)
 
 		case "echo":
-			raw := strings.TrimSpace(line[len("echo"):])
-			args := parseSingleQuoteArgs(raw)
+			// raw := strings.TrimSpace(line[len("echo"):])
+			args := parseSingleQuoteArgs(arguments[0])
 			fmt.Println(strings.Join(args, " "))
 
 		case "pwd":
