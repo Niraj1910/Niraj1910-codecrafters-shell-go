@@ -9,36 +9,36 @@ import (
 	"strings"
 )
 
-func parseTokens(input string) []string {
+func parseTokens(line string) []string {
+	var args []string
+	var cur strings.Builder
+	inQuote := false
 
-	args := []string{}
-	var curr strings.Builder
-	isQuote := false
-	for i := 0; i < len(input); i++ {
-		ch := input[i]
-
-		if ch == ' ' || ch == '\r' {
+	for _, r := range line {
+		if r == '\n' || r == '\r' {
 			continue
 		}
 
-		if ch == '\'' {
-			isQuote = !isQuote
+		if r == '\'' {
+			inQuote = !inQuote
 			continue
 		}
-		if !isQuote && (ch == ' ' || ch == '\t') {
-			if curr.Len() > 0 {
-				args = append(args, curr.String())
-				curr.Reset()
+
+		if !inQuote && (r == ' ' || r == '\t') {
+			if cur.Len() > 0 {
+				args = append(args, cur.String())
+				cur.Reset()
 			}
 			continue
 		}
 
-		curr.WriteByte(ch)
+		cur.WriteRune(r)
 	}
-	if curr.Len() > 0 {
-		args = append(args, curr.String())
-		curr.Reset()
+
+	if cur.Len() > 0 {
+		args = append(args, cur.String())
 	}
+
 	return args
 }
 
