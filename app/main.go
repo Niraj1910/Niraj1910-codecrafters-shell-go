@@ -152,7 +152,8 @@ func main() {
 				continue
 			}
 			target := arguments[0]
-			changeDirs(target)
+			dir := changeDirs(target)
+			fmt.Print(dir)
 			continue
 
 		case "exit":
