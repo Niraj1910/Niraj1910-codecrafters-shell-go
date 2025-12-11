@@ -12,19 +12,25 @@ import (
 func parseTokens(line string) []string {
 	var args []string
 	var cur strings.Builder
-	inQuote := false
+	inSingleQuote := false
+	inDoubleQuote := false
 
 	for _, r := range line {
 		if r == '\n' || r == '\r' {
 			continue
 		}
-
+		// SINGLE QUOTE HANDLING
 		if r == '\'' {
-			inQuote = !inQuote
+			inSingleQuote = !inSingleQuote
+			continue
+		}
+		// DOUBLE QUOTE HANDLING
+		if r == '"' {
+			inDoubleQuote = !inDoubleQuote
 			continue
 		}
 
-		if !inQuote && (r == ' ' || r == '\t') {
+		if !inSingleQuote && !inDoubleQuote && (r == ' ' || r == '\t') {
 			if cur.Len() > 0 {
 				args = append(args, cur.String())
 				cur.Reset()
@@ -130,7 +136,6 @@ func main() {
 			continue
 		}
 
-		// command, arguments := parseInput(line)
 		tokens := parseTokens(line)
 		command := tokens[0]
 		arguments := tokens[1:]
