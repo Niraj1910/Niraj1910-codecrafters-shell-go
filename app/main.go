@@ -33,6 +33,25 @@ func parseTokens(line string) []string {
 
 			nextR := line[i+1]
 
+			if inSingleQuote {
+				// In single quotes: backslash is literal
+				cur.WriteByte('\\')
+				continue
+			}
+
+			if inDoubleQuote {
+				// Escape only specific characters
+				switch nextR {
+				case '\\', '"', '$', '`':
+					cur.WriteByte(nextR)
+				default:
+					// \X → literal X
+					cur.WriteByte(nextR)
+				}
+				i++
+				continue
+			}
+
 			if nextR == ' ' {
 				cur.WriteRune(' ')
 				i++
@@ -73,6 +92,10 @@ func parseTokens(line string) []string {
 
 	if cur.Len() > 0 {
 		args = append(args, cur.String())
+	}
+
+	for idx, elem := range args {
+		fmt.Printf("%d - %s \n", idx, elem)
 	}
 
 	return args
