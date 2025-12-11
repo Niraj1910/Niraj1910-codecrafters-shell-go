@@ -26,7 +26,7 @@ func parseTokens(line string) []string {
 		if r == '\\' {
 			backSlash = true
 			if line[i+1] == '\\' {
-				cur.WriteByte(line[i+1])
+				cur.WriteByte(' ')
 			}
 			continue
 		}
