@@ -14,18 +14,23 @@ func parseTokens(line string) []string {
 	var cur strings.Builder
 	inSingleQuote := false
 	inDoubleQuote := false
+	backSlash := false
 
 	for _, r := range line {
 		if r == '\n' || r == '\r' {
 			continue
 		}
+
+		if r == '\\' {
+			backSlash = true
+		}
 		// DOUBLE QUOTE HANDLING
-		if r == '"' {
+		if r == '"' && !backSlash {
 			inDoubleQuote = !inDoubleQuote
 			continue
 		}
 		// SINGLE QUOTE HANDLING
-		if r == '\'' && !inDoubleQuote {
+		if r == '\'' && !inDoubleQuote && !backSlash {
 			inSingleQuote = !inSingleQuote
 			continue
 		}
