@@ -16,13 +16,18 @@ func parseTokens(line string) []string {
 	inDoubleQuote := false
 	backSlash := false
 
-	for _, r := range line {
+	for i := 0; i < len(line); i++ {
+		r := line[i]
+
 		if r == '\n' || r == '\r' {
 			continue
 		}
 
 		if r == '\\' {
 			backSlash = true
+			if line[i+1] == '\\' {
+				cur.WriteByte(line[i+1])
+			}
 			continue
 		}
 		// DOUBLE QUOTE HANDLING
@@ -44,7 +49,7 @@ func parseTokens(line string) []string {
 			continue
 		}
 
-		cur.WriteRune(r)
+		cur.WriteByte(r)
 	}
 
 	if cur.Len() > 0 {
