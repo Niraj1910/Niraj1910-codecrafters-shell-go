@@ -23,6 +23,7 @@ func parseTokens(line string) []string {
 
 		if r == '\\' {
 			backSlash = true
+			continue
 		}
 		// DOUBLE QUOTE HANDLING
 		if r == '"' && !backSlash {
