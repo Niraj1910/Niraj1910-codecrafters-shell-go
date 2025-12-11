@@ -25,7 +25,7 @@ func parseTokens(line string) []string {
 			continue
 		}
 		// SINGLE QUOTE HANDLING
-		if r == '\'' {
+		if r == '\'' && !inDoubleQuote {
 			inSingleQuote = !inSingleQuote
 			continue
 		}
