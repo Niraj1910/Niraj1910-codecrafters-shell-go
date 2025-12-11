@@ -22,14 +22,37 @@ func parseTokens(line string) []string {
 			continue
 		}
 
-		if r == '\\' && !inSingleQuote {
+		// BACKSLASH HANDLING
+		if r == '\\' {
+			// Backslash inside single quotes = literal backslash
+			if inSingleQuote {
+				cur.WriteRune('\\')
+				continue
+			}
 
+			// Inside double quotes, only \" and \\ are special
+			if inDoubleQuote {
+				if i+1 < len(line) {
+					next := line[i+1]
+					if next == '"' || next == '\\' {
+						cur.WriteByte(next)
+						i++
+						continue
+					}
+				}
+				// Otherwise, backslash is literal inside double-quote
+				cur.WriteRune('\\')
+				continue
+			}
+
+			// Outside quotes: escape ANY character
 			if i+1 < len(line) {
-				cur.WriteRune(rune(line[i+1]))
+				cur.WriteByte(line[i+1])
 				i++
 			}
 			continue
 		}
+
 		// DOUBLE QUOTE HANDLING
 		if r == '"' && !inSingleQuote {
 			inDoubleQuote = !inDoubleQuote
