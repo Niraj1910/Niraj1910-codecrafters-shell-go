@@ -94,9 +94,9 @@ func parseTokens(line string) []string {
 		args = append(args, cur.String())
 	}
 
-	for idx, elem := range args {
-		fmt.Printf("%d - %s \n", idx, elem)
-	}
+	// for idx, elem := range args {
+	// 	fmt.Printf("%d - %s \n", idx, elem)
+	// }
 
 	return args
 }
