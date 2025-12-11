@@ -14,7 +14,6 @@ func parseTokens(line string) []string {
 	var cur strings.Builder
 	inSingleQuote := false
 	inDoubleQuote := false
-	backSlash := false
 
 	for i := 0; i < len(line); i++ {
 		r := rune(line[i])
@@ -23,58 +22,21 @@ func parseTokens(line string) []string {
 			continue
 		}
 
-		if r == '\\' {
-			backSlash = true
+		if r == '\\' && !inSingleQuote {
 
-			if i+1 >= len(line) {
-				cur.WriteRune('\\')
-				continue
-			}
-
-			nextR := line[i+1]
-
-			if inSingleQuote {
-				// In single quotes: backslash is literal
-				cur.WriteByte('\\')
-				continue
-			}
-
-			if inDoubleQuote {
-				// Escape only specific characters
-				switch nextR {
-				case '\\', '"', '$', '`':
-					cur.WriteByte(nextR)
-				default:
-					// \X → literal X
-					cur.WriteByte(nextR)
-				}
+			if i+1 < len(line) {
+				cur.WriteRune(rune(line[i+1]))
 				i++
-				continue
 			}
-
-			if nextR == ' ' {
-				cur.WriteRune(' ')
-				i++
-				continue
-			}
-
-			if nextR == '\\' {
-				cur.WriteRune('\\')
-				i++
-				continue
-			}
-
-			cur.WriteRune(rune(nextR))
-			i++
 			continue
 		}
 		// DOUBLE QUOTE HANDLING
-		if r == '"' && !backSlash {
+		if r == '"' && !inSingleQuote {
 			inDoubleQuote = !inDoubleQuote
 			continue
 		}
 		// SINGLE QUOTE HANDLING
-		if r == '\'' && !inDoubleQuote && !backSlash {
+		if r == '\'' && !inDoubleQuote {
 			inSingleQuote = !inSingleQuote
 			continue
 		}
@@ -224,6 +186,8 @@ func main() {
 				fmt.Println(command + ": command not found")
 				continue
 			}
+
+			// fmt.Print(arguments)
 
 			cmd := exec.Command(command, arguments...)
 			cmd.Stdin = os.Stdin
