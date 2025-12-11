@@ -17,7 +17,7 @@ func parseTokens(line string) []string {
 	backSlash := false
 
 	for i := 0; i < len(line); i++ {
-		r := line[i]
+		r := rune(line[i])
 
 		if r == '\n' || r == '\r' {
 			continue
@@ -25,9 +25,28 @@ func parseTokens(line string) []string {
 
 		if r == '\\' {
 			backSlash = true
-			if line[i+1] == '\\' {
-				cur.WriteByte(' ')
+
+			if i+1 >= len(line) {
+				cur.WriteRune('\\')
+				continue
 			}
+
+			nextR := line[i+1]
+
+			if nextR == ' ' {
+				cur.WriteRune(' ')
+				i++
+				continue
+			}
+
+			if nextR == '\\' {
+				cur.WriteRune('\\')
+				i++
+				continue
+			}
+
+			cur.WriteRune(rune(nextR))
+			i++
 			continue
 		}
 		// DOUBLE QUOTE HANDLING
@@ -49,7 +68,7 @@ func parseTokens(line string) []string {
 			continue
 		}
 
-		cur.WriteByte(r)
+		cur.WriteRune(r)
 	}
 
 	if cur.Len() > 0 {
