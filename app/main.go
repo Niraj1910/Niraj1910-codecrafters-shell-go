@@ -19,14 +19,14 @@ func parseTokens(line string) []string {
 		if r == '\n' || r == '\r' {
 			continue
 		}
-		// SINGLE QUOTE HANDLING
-		if r == '\'' {
-			inSingleQuote = !inSingleQuote
-			continue
-		}
 		// DOUBLE QUOTE HANDLING
 		if r == '"' {
 			inDoubleQuote = !inDoubleQuote
+			continue
+		}
+		// SINGLE QUOTE HANDLING
+		if r == '\'' {
+			inSingleQuote = !inSingleQuote
 			continue
 		}
 
