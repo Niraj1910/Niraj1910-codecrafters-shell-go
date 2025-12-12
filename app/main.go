@@ -228,6 +228,7 @@ func main() {
 
 		case "echo":
 			output := strings.Join(arguments, " ")
+			output += "\n"
 
 			if redirectStdoutFile != nil {
 				redirectStdoutFile.Write([]byte(output))
