@@ -75,33 +75,38 @@ func extractFilePath(r rune, i int, line string) string {
 }
 
 func detectRedirectOrAppend(i int, line string) (bool, bool) {
-	var isStderr, append bool
+	isStderr := false
+	append := false
 
-	// Case 1: 1>> or 2>>
-	if i+2 < len(line) && (line[i] == '1' || line[i] == '2' && line[i+1] == '>' && line[i+2] == '>') {
+	// Case: 1>> or 2>>
+	if i+2 < len(line) && (line[i] == '1' || line[i] == '2') && line[i+1] == '>' && line[i+2] == '>' {
 		isStderr = (line[i] == '2')
 		append = true
+		return isStderr, append
 	}
 
-	// Case 2: 1> or 2>
-	if i+1 < len(line) && (line[i] == '1' || line[i] == '2' && line[i+1] == '>') {
+	// Case: >> (stdout)
+	if i+1 < len(line) && line[i] == '>' && line[i+1] == '>' {
+		isStderr = false
+		append = true
+		return isStderr, append
+	}
+
+	// Case: 1> or 2>
+	if i+1 < len(line) && (line[i] == '1' || line[i] == '2') && line[i+1] == '>' {
 		isStderr = (line[i] == '2')
 		append = false
+		return isStderr, append
 	}
 
-	// Case 3: >> (stdout)
-	if i+1 < len(line) && line[i] == '>' && line[i+1] == '>' {
-		isStderr = (line[i] == '2')
-		append = true
-	}
-
-	// /Case 4: > (stdout)
+	// Case: >
 	if line[i] == '>' {
 		isStderr = false
 		append = false
+		return isStderr, append
 	}
 
-	return isStderr, append
+	return false, false
 }
 
 func parseTokens(line string) ([]string, *os.File, *os.File) {
