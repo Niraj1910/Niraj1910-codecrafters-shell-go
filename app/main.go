@@ -222,11 +222,11 @@ func main() {
 
 		case "echo":
 			output := strings.Join(arguments, " ")
-			fmt.Println(output)
 
-			_, err := redirectStdoutFile.Write([]byte(output))
-			if err != nil {
-				fmt.Printf("could not write in the file err: %s", err)
+			if redirectStdoutFile != nil {
+				redirectStdoutFile.Write([]byte(output))
+			} else {
+				fmt.Println(output)
 			}
 
 		case "pwd":
@@ -257,9 +257,14 @@ func main() {
 
 			cmd := exec.Command(command, arguments...)
 			cmd.Stdin = os.Stdin
-			cmd.Stdout = os.Stdout
-			cmd.Stderr = os.Stderr
 
+			if redirectStdoutFile != nil {
+				cmd.Stdout = redirectStdoutFile
+			} else {
+				cmd.Stdout = os.Stdout
+			}
+
+			cmd.Stderr = os.Stderr
 			cmd.Run()
 
 		}
