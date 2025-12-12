@@ -11,23 +11,23 @@ import (
 
 func handleRedirectStdout(filePath string, flagAppend bool) *os.File {
 	// check file exists
-	_, fileErr := os.Stat(filePath)
+	// _, fileErr := os.Stat(filePath)
 	var file *os.File
 	var err error
-	if os.IsNotExist(fileErr) {
-		// create a new file with write permissions
-		if flagAppend {
-			file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-		} else {
-			file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
-		}
+	// if os.IsNotExist(fileErr) {
+	// 	// create a new file with write permissions
+	// 	if flagAppend {
+	// 		file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	// 	} else {
+	// 		file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	// 	}
 
-		if err != nil {
-			fmt.Printf("err: can not create file: %s \n", err)
-			return nil
-		}
-		return file
-	}
+	// 	if err != nil {
+	// 		fmt.Printf("err: can not create file: %s \n", err)
+	// 		return nil
+	// 	}
+	// 	return file
+	// }
 	// File exist -> open it for writing + truncate
 	if flagAppend {
 		file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
@@ -125,10 +125,6 @@ func parseTokens(line string) ([]string, *os.File, *os.File) {
 
 			filePath := extractFilePath(r, i, line)
 			file := handleRedirectStdout(filePath, appendFlag)
-			// fmt.Println("isStderr -> ", isStderr)
-			// fmt.Println("appendFlag -> ", appendFlag)
-			// fmt.Println("filePath -> ", filePath)
-			// fmt.Println("file -> ", file)
 
 			if isStderr {
 				stdoutErrFile = file
