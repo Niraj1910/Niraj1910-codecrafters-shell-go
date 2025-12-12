@@ -241,12 +241,12 @@ func main() {
 			fmt.Println(output)
 
 		case "echo":
-			output := strings.Join(arguments, " ")
+			output := strings.Join(arguments, " ") + "\n"
 
 			if redirectStdoutFile != nil {
 				redirectStdoutFile.Write([]byte(output))
 			} else {
-				fmt.Println(output)
+				fmt.Print(output)
 			}
 
 		case "pwd":
