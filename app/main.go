@@ -47,7 +47,8 @@ func parseTokens(line string) ([]string, *os.File) {
 		}
 
 		// REDIRECT STDOUT: handle ">" and "1>"
-		if r == '>' && !(i > 0 && line[i-1] == '1') {
+		if r == '>' || (r == '1' && i+1 < len(line) && line[i+1] == '>') {
+
 			// Move index to first character after ">" or "1>"
 			k := i + 1
 			if r == '1' {
