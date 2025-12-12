@@ -117,6 +117,10 @@ func parseTokens(line string) ([]string, *os.File, *os.File) {
 
 			filePath := extractFilePath(r, i, line)
 			file := handleRedirectStdout(filePath, appendFlag)
+			fmt.Println("isStderr -> ", isStderr)
+			fmt.Println("appendFlag -> ", appendFlag)
+			fmt.Println("filePath -> ", filePath)
+			fmt.Println("file -> ", file)
 
 			if isStderr {
 				stdoutErrFile = file
