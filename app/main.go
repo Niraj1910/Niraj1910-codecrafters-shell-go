@@ -85,8 +85,6 @@ func parseTokens(line string) ([]string, *os.File, *os.File) {
 				args = append(args, token)
 			}
 
-			fmt.Println(args)
-
 			break
 		}
 
