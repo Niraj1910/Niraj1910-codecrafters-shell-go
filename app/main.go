@@ -42,15 +42,8 @@ func handleRedirectStdout(filePath string, flagAppend bool) *os.File {
 	return file
 }
 
-func extractFilePath(r rune, i int, line string) string {
-	var k int
-	// Move index to first character after ">" or "1>" or "2>"
-	if r == '1' || r == '2' {
-		k = i + 2
-	} else {
-		k = i + 1
-	}
-
+func extractFilePath(i int, line string) string {
+	k := i
 	// skip whitespace
 	for k < len(line) && (line[k] == ' ' || line[k] == '\t') {
 		k++
@@ -66,34 +59,39 @@ func extractFilePath(r rune, i int, line string) string {
 	return filePath
 }
 
-func detectRedirectOrAppend(i int, line string) (bool, bool) {
+func detectRedirectOrAppend(i int, line string) (bool, bool, int) {
 	var isStderr, append bool
+	var skipIdx int
 
 	// Case 1: 1>> or 2>>
-	if i+2 < len(line) && (line[i] == '1' || line[i] == '2' && line[i+1] == '>' && line[i+2] == '>') {
-		isStderr = (line[i] == '2')
+	if i+2 < len(line) && (line[i-1] == '1' || line[i-1] == '2' && line[i] == '>' && line[i+1] == '>') {
+		isStderr = (line[i-1] == '2')
 		append = true
+		skipIdx = i + 2
 	}
 
 	// Case 2: 1> or 2>
-	if i+1 < len(line) && (line[i] == '1' || line[i] == '2' && line[i+1] == '>') {
+	if i+1 < len(line) && (line[i-1] == '1' || line[i-1] == '2' && line[i] == '>') {
 		isStderr = (line[i] == '2')
 		append = false
+		skipIdx = i + 1
 	}
 
 	// Case 3: >> (stdout)
 	if i+1 < len(line) && line[i] == '>' && line[i+1] == '>' {
 		isStderr = (line[i] == '2')
 		append = true
+		skipIdx = i + 2
 	}
 
 	// /Case 4: > (stdout)
 	if line[i] == '>' {
 		isStderr = false
 		append = false
+		skipIdx = i + 1
 	}
 
-	return isStderr, append
+	return isStderr, append, skipIdx
 }
 
 func parseTokens(line string) ([]string, *os.File, *os.File) {
@@ -112,11 +110,11 @@ func parseTokens(line string) ([]string, *os.File, *os.File) {
 		}
 
 		// Handle redirect and append stdout & stderr
-		if r == '1' || r == '2' || r == '>' {
+		if r == '>' {
 
-			isStderr, appendFlag := detectRedirectOrAppend(i, line)
+			isStderr, appendFlag, skipIdx := detectRedirectOrAppend(i, line)
 
-			filePath := extractFilePath(r, i, line)
+			filePath := extractFilePath(skipIdx, line)
 			file := handleRedirectStdout(filePath, appendFlag)
 
 			if isStderr {
