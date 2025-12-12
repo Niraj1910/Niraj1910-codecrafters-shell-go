@@ -77,8 +77,6 @@ func parseTokens(line string) ([]string, *os.File, *os.File) {
 				redirectStdoutFile = file
 			}
 
-			redirectStdoutFile = handleRedirectStdout(filePath)
-
 			// add the token built so far
 			token := strings.TrimSpace(cur.String())
 			if len(token) > 0 {
