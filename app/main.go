@@ -287,13 +287,18 @@ func main() {
 			cmd := exec.Command(command, arguments...)
 			cmd.Stdin = os.Stdin
 
-			if stdoutErrFile != nil {
-				cmd.Stdout = stdoutErrFile
+			if redirectStdoutFile != nil {
+				cmd.Stdout = redirectStdoutFile
 			} else {
 				cmd.Stdout = os.Stdout
 			}
 
-			cmd.Stderr = os.Stderr
+			if stdoutErrFile != nil {
+				cmd.Stderr = stdoutErrFile
+			} else {
+				cmd.Stderr = os.Stderr
+			}
+
 			cmd.Run()
 
 		}
