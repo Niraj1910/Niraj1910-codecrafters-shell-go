@@ -47,7 +47,7 @@ func parseTokens(line string) ([]string, *os.File) {
 		// HANDLE REDIRECT STDOUT
 		if r == '>' || r == 1 && i+1 < len(line) && line[i+1] == '>' {
 
-			redirectStdoutFile = handleRedirectStdout(line[i:])
+			redirectStdoutFile = handleRedirectStdout(line[i+1:])
 
 			// don't forget to add the cur in the args[]
 			token := strings.TrimSpace(cur.String())
