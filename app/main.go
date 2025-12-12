@@ -9,17 +9,52 @@ import (
 	"strings"
 )
 
-func parseTokens(line string) []string {
+func handleRedirectStdout(filePath string) *os.File {
+	// check file exists
+	_, err := os.Stat(filePath)
+	if os.IsNotExist(err) {
+		// create a new file with write permissions
+		file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+
+		if err != nil {
+			fmt.Printf("err: can not open or create file: %s", err)
+		}
+		return file
+	}
+	// File exist -> open it for writing + truncate
+	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC, 0644)
+
+	if err != nil {
+		fmt.Printf("err: can not open or create file: %s", err)
+	}
+	return file
+}
+
+func parseTokens(line string) ([]string, *os.File) {
 	var args []string
 	var cur strings.Builder
 	inSingleQuote := false
 	inDoubleQuote := false
+	var redirectStdoutFile *os.File
 
 	for i := 0; i < len(line); i++ {
 		r := rune(line[i])
 
 		if r == '\n' || r == '\r' {
 			continue
+		}
+
+		// HANDLE REDIRECT STDOUT
+		if r == '>' || r == 1 && i+1 < len(line) && line[i+1] == '>' {
+
+			redirectStdoutFile = handleRedirectStdout(line[i:])
+
+			// don't forget to add the cur in the args[]
+			token := strings.TrimSpace(cur.String())
+			if len(token) > 0 {
+				args = append(args, token)
+			}
+			break
 		}
 
 		// BACKSLASH HANDLING
@@ -83,7 +118,7 @@ func parseTokens(line string) []string {
 		fmt.Printf("%d - %s \n", idx, elem)
 	}
 
-	return args
+	return args, redirectStdoutFile
 }
 
 func findExecutable(cmd string) (string, bool) {
@@ -174,7 +209,7 @@ func main() {
 			continue
 		}
 
-		tokens := parseTokens(line)
+		tokens, redirectStdoutFile := parseTokens(line)
 		command := tokens[0]
 		arguments := tokens[1:]
 
@@ -184,7 +219,13 @@ func main() {
 			fmt.Println(output)
 
 		case "echo":
-			fmt.Println(strings.Join(arguments, " "))
+			output := strings.Join(arguments, " ")
+			fmt.Println(output)
+
+			_, err := redirectStdoutFile.Write([]byte(output))
+			if err != nil {
+				fmt.Printf("could not write in the file err: %s", err)
+			}
 
 		case "pwd":
 			cwd, _ := os.Getwd()
