@@ -46,9 +46,17 @@ func extractFilePath(r rune, i int, line string) string {
 	var k int
 	// Move index to first character after ">" or "1>" or "2>"
 	if r == '1' || r == '2' {
-		k = i + 2
+		if i+3 < len(line) && line[i+1] == '>' && line[i+2] == '>' {
+			k = i + 3
+		} else {
+			k = i + 2
+		}
 	} else {
-		k = i + 1
+		if i+2 < len(line) && line[i+1] == '>' {
+			k = i + 2
+		} else {
+			k = i + 1
+		}
 	}
 
 	// skip whitespace
