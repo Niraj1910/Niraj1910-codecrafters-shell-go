@@ -17,7 +17,7 @@ func handleRedirectStdout(filePath string) *os.File {
 		file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 
 		if err != nil {
-			fmt.Printf("err: can not open or create file: %s", err)
+			fmt.Printf("err: create file: %s", err)
 		}
 		return file
 	}
@@ -25,7 +25,7 @@ func handleRedirectStdout(filePath string) *os.File {
 	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC, 0644)
 
 	if err != nil {
-		fmt.Printf("err: can not open or create file: %s", err)
+		fmt.Printf("err: can not open file: %s", err)
 	}
 	return file
 }
@@ -114,9 +114,9 @@ func parseTokens(line string) ([]string, *os.File) {
 		args = append(args, cur.String())
 	}
 
-	for idx, elem := range args {
-		fmt.Printf("%d - %s \n", idx, elem)
-	}
+	// for idx, elem := range args {
+	// 	fmt.Printf("%d - %s \n", idx, elem)
+	// }
 
 	return args, redirectStdoutFile
 }
