@@ -49,7 +49,7 @@ func parseTokens(line string) ([]string, *os.File) {
 		// HANDLE REDIRECT STDOUT
 		if r == '>' || (r == '1' && i+1 < len(line) && line[i+1] == '>') {
 			var trimStr string
-			if r == 1 {
+			if r == '1' {
 				trimStr = strings.TrimSpace(line[i+2:])
 			} else {
 				trimStr = strings.TrimSpace(line[i+1:])
