@@ -66,7 +66,7 @@ func parseTokens(line string) ([]string, *os.File) {
 				k++
 			}
 
-			filePath := line[start:k]
+			filePath := strings.TrimSpace(line[start:k])
 
 			redirectStdoutFile = handleRedirectStdout(filePath)
 
