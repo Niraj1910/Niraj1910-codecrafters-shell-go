@@ -281,7 +281,7 @@ func main() {
 
 			if redirectStdoutFile != nil {
 				cmd.Stdout = redirectStdoutFile
-				redirectStdoutFile.Close()
+				// redirectStdoutFile.Close()
 			} else {
 				cmd.Stdout = os.Stdout
 			}
