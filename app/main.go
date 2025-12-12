@@ -32,12 +32,13 @@ func handleRedirectStdout(filePath string) *os.File {
 	return file
 }
 
-func parseTokens(line string) ([]string, *os.File) {
+func parseTokens(line string) ([]string, *os.File, *os.File) {
 	var args []string
 	var cur strings.Builder
 	inSingleQuote := false
 	inDoubleQuote := false
 	var redirectStdoutFile *os.File
+	var stdoutErrFile *os.File
 
 	for i := 0; i < len(line); i++ {
 		r := rune(line[i])
@@ -67,6 +68,14 @@ func parseTokens(line string) ([]string, *os.File) {
 			}
 
 			filePath := strings.TrimSpace(line[start:k])
+
+			file := handleRedirectStdout(filePath)
+
+			if r == '2' {
+				stdoutErrFile = file
+			} else {
+				redirectStdoutFile = file
+			}
 
 			redirectStdoutFile = handleRedirectStdout(filePath)
 
@@ -140,7 +149,7 @@ func parseTokens(line string) ([]string, *os.File) {
 	// 	fmt.Printf("%d - %s \n", idx, elem)
 	// }
 
-	return args, redirectStdoutFile
+	return args, redirectStdoutFile, stdoutErrFile
 }
 
 func findExecutable(cmd string) (string, bool) {
@@ -231,7 +240,7 @@ func main() {
 			continue
 		}
 
-		tokens, redirectStdoutFile := parseTokens(line)
+		tokens, redirectStdoutFile, stdoutErrFile := parseTokens(line)
 		command := tokens[0]
 		arguments := tokens[1:]
 
@@ -278,24 +287,22 @@ func main() {
 			cmd := exec.Command(command, arguments...)
 			cmd.Stdin = os.Stdin
 
-			if redirectStdoutFile != nil {
-				cmd.Stdout = redirectStdoutFile
+			if stdoutErrFile != nil {
+				cmd.Stdout = stdoutErrFile
 			} else {
 				cmd.Stdout = os.Stdout
 			}
 
-			if redirectStdoutFile != nil {
-				cmd.Stderr = redirectStdoutFile
-			} else {
-				cmd.Stderr = os.Stderr
-			}
-
+			cmd.Stderr = os.Stderr
 			cmd.Run()
 
 		}
 
 		if redirectStdoutFile != nil {
 			redirectStdoutFile.Close()
+		}
+		if stdoutErrFile != nil {
+			stdoutErrFile.Close()
 		}
 	}
 }
