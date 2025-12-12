@@ -17,7 +17,7 @@ func handleRedirectStdout(filePath string) *os.File {
 		file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
 
 		if err != nil {
-			fmt.Printf("err: create file: %s", err)
+			fmt.Printf("err: can not create file: %s", err)
 		}
 		return file
 	}
