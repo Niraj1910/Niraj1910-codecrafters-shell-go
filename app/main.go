@@ -50,10 +50,12 @@ func parseTokens(line string) ([]string, *os.File, *os.File) {
 		// REDIRECT STDOUT: handle ">" and "1>"
 		if r == '>' || ((r == '1' || r == '2') && i+1 < len(line) && line[i+1] == '>') {
 
+			var k int
 			// Move index to first character after ">" or "1>" or "2>"
-			k := i + 1
-			if r == '1' {
+			if r == '1' || r == '2' {
 				k = i + 2
+			} else {
+				k = i + 1
 			}
 
 			// skip whitespace
