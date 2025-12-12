@@ -46,33 +46,36 @@ func parseTokens(line string) ([]string, *os.File) {
 			continue
 		}
 
-		// HANDLE REDIRECT STDOUT
+		// REDIRECT STDOUT: handle ">" and "1>"
 		if r == '>' || (r == '1' && i+1 < len(line) && line[i+1] == '>') {
 
+			// Move index to first character after ">" or "1>"
 			k := i + 1
 			if r == '1' {
 				k = i + 2
 			}
 
 			// skip whitespace
-			for k < len(line) && line[k] == ' ' || line[k] == '\t' {
+			for k < len(line) && (line[k] == ' ' || line[k] == '\t') {
 				k++
 			}
 
-			// extract ONE filename
+			// extract ONE filename token
 			start := k
 			for k < len(line) && line[k] != ' ' && line[k] != '\t' {
 				k++
 			}
+
 			filePath := line[start:k]
 
 			redirectStdoutFile = handleRedirectStdout(filePath)
 
-			// don't forget to add the cur in the args[]
+			// add the token built so far
 			token := strings.TrimSpace(cur.String())
 			if len(token) > 0 {
 				args = append(args, token)
 			}
+
 			break
 		}
 
