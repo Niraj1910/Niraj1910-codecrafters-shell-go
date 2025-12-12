@@ -245,7 +245,6 @@ func main() {
 
 			if redirectStdoutFile != nil {
 				redirectStdoutFile.Write([]byte(output))
-				redirectStdoutFile.Close()
 			} else {
 				fmt.Println(output)
 			}
@@ -281,7 +280,6 @@ func main() {
 
 			if redirectStdoutFile != nil {
 				cmd.Stdout = redirectStdoutFile
-				// redirectStdoutFile.Close()
 			} else {
 				cmd.Stdout = os.Stdout
 			}
@@ -289,6 +287,10 @@ func main() {
 			cmd.Stderr = os.Stderr
 			cmd.Run()
 
+		}
+
+		if redirectStdoutFile != nil {
+			redirectStdoutFile.Close()
 		}
 	}
 }
