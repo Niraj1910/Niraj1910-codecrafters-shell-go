@@ -9,12 +9,18 @@ import (
 	"strings"
 )
 
-func handleRedirectStdout(filePath string) *os.File {
+func handleRedirectStdout(filePath string, flagAppend bool) *os.File {
 	// check file exists
-	_, err := os.Stat(filePath)
-	if os.IsNotExist(err) {
+	_, fileErr := os.Stat(filePath)
+	var file *os.File
+	var err error
+	if os.IsNotExist(fileErr) {
 		// create a new file with write permissions
-		file, err := os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		if flagAppend {
+			file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		} else {
+			file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+		}
 
 		if err != nil {
 			fmt.Printf("err: can not create file: %s \n", err)
@@ -23,13 +29,71 @@ func handleRedirectStdout(filePath string) *os.File {
 		return file
 	}
 	// File exist -> open it for writing + truncate
-	file, err := os.OpenFile(filePath, os.O_WRONLY|os.O_TRUNC, 0644)
+	if flagAppend {
+		file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	} else {
+		file, err = os.OpenFile(filePath, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	}
 
 	if err != nil {
 		fmt.Printf("err: can not open file: %s", err)
 		return nil
 	}
 	return file
+}
+
+func extractFilePath(r rune, i int, line string) string {
+	var k int
+	// Move index to first character after ">" or "1>" or "2>"
+	if r == '1' || r == '2' {
+		k = i + 2
+	} else {
+		k = i + 1
+	}
+
+	// skip whitespace
+	for k < len(line) && (line[k] == ' ' || line[k] == '\t') {
+		k++
+	}
+
+	// extract ONE filename token
+	start := k
+	for k < len(line) && line[k] != ' ' && line[k] != '\t' {
+		k++
+	}
+
+	filePath := strings.TrimSpace(line[start:k])
+	return filePath
+}
+
+func detectRedirectOrAppend(i int, line string) (bool, bool) {
+	var isStderr, append bool
+
+	// Case 1: 1>> or 2>>
+	if i+2 < len(line) && (line[i] == '1' || line[i] == '2' && line[i+1] == '>' && line[i+2] == '>') {
+		isStderr = (line[i] == '2')
+		append = true
+	}
+
+	// Case 2: 1> or 2>
+	if i+1 < len(line) && (line[i] == '1' || line[i] == '2' && line[i+1] == '>') {
+		isStderr = (line[i] == '2')
+		append = false
+	}
+
+	// Case 3: >> (stdout)
+	if i+1 < len(line) && line[i] == '>' && line[i+1] == '>' {
+		isStderr = (line[i] == '2')
+		append = true
+	}
+
+	// /Case 4: > (stdout)
+	if line[i] == '>' {
+		isStderr = false
+		append = false
+	}
+
+	return isStderr, append
 }
 
 func parseTokens(line string) ([]string, *os.File, *os.File) {
@@ -47,44 +111,24 @@ func parseTokens(line string) ([]string, *os.File, *os.File) {
 			continue
 		}
 
-		// REDIRECT STDOUT: handle ">" and "1>"
-		if r == '>' || ((r == '1' || r == '2') && i+1 < len(line) && line[i+1] == '>') {
+		// Handle redirect and append stdout & stderr
+		if r == '1' || r == '2' || r == '>' {
 
-			var k int
-			// Move index to first character after ">" or "1>" or "2>"
-			if r == '1' || r == '2' {
-				k = i + 2
-			} else {
-				k = i + 1
-			}
+			isStderr, appendFlag := detectRedirectOrAppend(i, line)
 
-			// skip whitespace
-			for k < len(line) && (line[k] == ' ' || line[k] == '\t') {
-				k++
-			}
+			filePath := extractFilePath(r, i, line)
+			file := handleRedirectStdout(filePath, appendFlag)
 
-			// extract ONE filename token
-			start := k
-			for k < len(line) && line[k] != ' ' && line[k] != '\t' {
-				k++
-			}
-
-			filePath := strings.TrimSpace(line[start:k])
-
-			file := handleRedirectStdout(filePath)
-
-			if r == '2' {
+			if isStderr {
 				stdoutErrFile = file
 			} else {
 				redirectStdoutFile = file
 			}
-
 			// add the token built so far
 			token := strings.TrimSpace(cur.String())
 			if len(token) > 0 {
 				args = append(args, token)
 			}
-
 			break
 		}
 
