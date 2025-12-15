@@ -19,15 +19,14 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	if strings.Contains(input, " ") {
 		return nil, 0
 	}
+	builtins := []string{"echo", "exit"}
 
-	switch {
-	case strings.HasPrefix("echo", input):
-		return [][]rune{[]rune("echo ")}, len([]rune(input))
-
-	case strings.HasPrefix("exit", input):
-		return [][]rune{[]rune("exit ")}, len([]rune(input))
+	for _, cmd := range builtins {
+		if strings.HasPrefix(cmd, input) {
+			suffix := cmd[len(input):] + " "
+			return [][]rune{[]rune(suffix)}, pos
+		}
 	}
-
 	return nil, 0
 }
 
@@ -317,8 +316,6 @@ func main() {
 
 	for {
 		line, err := rl.Readline()
-
-		fmt.Println(line)
 
 		if err != nil {
 			fmt.Printf("cound not read the command: %s", err)
