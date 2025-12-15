@@ -15,11 +15,16 @@ type builtinCompleter struct{}
 func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	input := string(line[:pos])
 
-	if strings.HasPrefix("echo", input) {
-		return [][]rune{[]rune("echo ")}, len([]rune(input))
+	// Only autocomplete the first word
+	if strings.Contains(input, " ") {
+		return nil, 0
 	}
 
-	if strings.HasPrefix("exit ", input) {
+	switch {
+	case strings.HasPrefix("echo", input):
+		return [][]rune{[]rune("echo ")}, len([]rune(input))
+
+	case strings.HasPrefix("exit", input):
 		return [][]rune{[]rune("exit ")}, len([]rune(input))
 	}
 
