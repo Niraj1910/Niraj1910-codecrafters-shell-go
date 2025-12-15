@@ -17,6 +17,7 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 
 	// Only autocomplete the first word
 	if strings.Contains(input, " ") {
+		fmt.Print("\x07")
 		return nil, 0
 	}
 	builtins := []string{"echo", "exit"}
@@ -27,6 +28,8 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 			return [][]rune{[]rune(suffix)}, pos
 		}
 	}
+	// invalid completeion -> ring bell
+	fmt.Print("\x07")
 	return nil, 0
 }
 
