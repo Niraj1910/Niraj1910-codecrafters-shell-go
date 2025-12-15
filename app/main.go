@@ -21,10 +21,10 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	}
 
 	switch {
-	case strings.HasPrefix("echo", input):
+	case strings.HasPrefix(input, "echo"):
 		return [][]rune{[]rune("echo ")}, len([]rune(input))
 
-	case strings.HasPrefix("exit", input):
+	case strings.HasPrefix(input, "exit"):
 		return [][]rune{[]rune("exit ")}, len([]rune(input))
 	}
 
