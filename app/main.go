@@ -318,6 +318,8 @@ func main() {
 	for {
 		line, err := rl.Readline()
 
+		fmt.Println(line)
+
 		if err != nil {
 			fmt.Printf("cound not read the command: %s", err)
 			continue
