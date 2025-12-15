@@ -1,13 +1,30 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"os"
 	"os/exec"
 	"path/filepath"
 	"strings"
+
+	"github.com/chzyer/readline"
 )
+
+type builtinCompleter struct{}
+
+func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
+	input := string(line[:pos])
+
+	if strings.HasPrefix("echo", input) {
+		return [][]rune{[]rune("echo ")}, pos
+	}
+
+	if strings.HasPrefix("exit ", input) {
+		return [][]rune{[]rune("exit ")}, pos
+	}
+
+	return nil, 0
+}
 
 func handleRedirectStdout(filePath string, flagAppend bool) *os.File {
 	// check file exists
@@ -281,12 +298,21 @@ func changeDirs(target string) string {
 }
 
 func main() {
-	reader := bufio.NewReader(os.Stdin)
+
+	cfg := readline.Config{
+		Prompt:       "$ ",
+		AutoComplete: &builtinCompleter{},
+	}
+
+	rl, err := readline.NewEx(&cfg)
+	if err != nil {
+		panic(err)
+	}
+	defer rl.Close()
 
 	for {
-		fmt.Print("$ ")
+		line, err := rl.Readline()
 
-		line, err := reader.ReadString('\n')
 		if err != nil {
 			fmt.Printf("cound not read the command: %s", err)
 			continue
