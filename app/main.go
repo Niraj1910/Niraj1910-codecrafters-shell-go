@@ -16,11 +16,11 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	input := string(line[:pos])
 
 	if strings.HasPrefix("echo", input) {
-		return [][]rune{[]rune("echo ")}, pos
+		return [][]rune{[]rune("echo ")}, len([]rune(input))
 	}
 
 	if strings.HasPrefix("exit ", input) {
-		return [][]rune{[]rune("exit ")}, pos
+		return [][]rune{[]rune("exit ")}, len([]rune(input))
 	}
 
 	return nil, 0
