@@ -30,17 +30,11 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	}
 
 	// Executable completion
-	path := os.Getenv("PATH")
-	dirs := strings.Split(path, ":")
 
-	fmt.Println("path -> ", path)
+	for _, execDir := range executablesInPATH() {
 
-	for _, dir := range dirs {
-
-		fmt.Println(dir)
-
-		if strings.HasPrefix(dir, input) {
-			suffix := dir[len(input):] + " "
+		if strings.HasPrefix(execDir, input) {
+			suffix := execDir[len(input):] + " "
 			return [][]rune{[]rune(suffix)}, pos
 		}
 	}
@@ -48,6 +42,40 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	// invalid completeion -> ring bell
 	fmt.Print("\x07")
 	return nil, 0
+}
+
+func executablesInPATH() []string {
+	var result []string
+	seen := make(map[string]bool)
+
+	path := os.Getenv("PATH")
+	dirs := strings.Split(path, ":")
+
+	for _, dir := range dirs {
+		files, err := os.ReadDir(dir)
+		if err != nil {
+			continue
+		}
+		for _, file := range files {
+			if file.IsDir() {
+				continue
+			}
+
+			info, err := file.Info()
+			if err != nil {
+				continue
+			}
+
+			if info.Mode()&0111 != 0 {
+				name := file.Name()
+				if !seen[name] {
+					seen[name] = true
+					result = append(result, name)
+				}
+			}
+		}
+	}
+	return result
 }
 
 func handleRedirectStdout(filePath string, flagAppend bool) *os.File {
