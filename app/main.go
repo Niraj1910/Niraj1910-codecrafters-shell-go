@@ -35,7 +35,6 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 
 	// Executable completion
 	for _, execDir := range executablesInPATH() {
-
 		if strings.HasPrefix(execDir, input) {
 			compl = append(compl, execDir)
 		}
@@ -69,6 +68,8 @@ func (c *builtinCompleter) handleCompletions(compl []string, input string, pos i
 		fmt.Print("\x07")
 		return nil, 0
 	}
+
+	fmt.Println(compl)
 
 	// Second tab  -> print options
 	fmt.Print("\n")
