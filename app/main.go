@@ -30,7 +30,7 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 
 	for _, cmd := range builtins {
 		if strings.HasPrefix(cmd, input) {
-			suffix := compl[0][len(input):] + " "
+			suffix := cmd[len(input):] + " "
 			return [][]rune{[]rune(suffix)}, pos
 		}
 	}
