@@ -81,7 +81,7 @@ func (c *builtinCompleter) handleCompletions(compl []string, input string, pos i
 		fmt.Print(c)
 	}
 
-	fmt.Print("\n$" + input)
+	fmt.Print("\n$ " + input)
 
 	return nil, 0
 }
