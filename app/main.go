@@ -34,6 +34,9 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	dirs := strings.Split(path, ":")
 
 	for _, dir := range dirs {
+
+		fmt.Println(dir)
+
 		if strings.HasPrefix(dir, input) {
 			suffix := dir[len(input):] + " "
 			return [][]rune{[]rune(suffix)}, pos
