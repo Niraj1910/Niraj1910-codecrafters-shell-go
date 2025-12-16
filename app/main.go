@@ -5,6 +5,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"sort"
 	"strings"
 
 	"github.com/chzyer/readline"
@@ -70,6 +71,8 @@ func (c *builtinCompleter) handleCompletions(compl []string, input string, pos i
 	}
 
 	// Second tab  -> print options
+	sort.Strings(compl)
+
 	fmt.Print("\n")
 	for i, c := range compl {
 		if i > 0 {
