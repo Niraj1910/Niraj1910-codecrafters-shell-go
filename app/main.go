@@ -60,7 +60,6 @@ func (c *builtinCompleter) handleCompletions(compl []string, input string, pos i
 	}
 
 	if len(compl) == 1 {
-		fmt.Println(compl)
 		elem := compl[0]
 		suffix := elem[len(input):] + " "
 		return [][]rune{[]rune(suffix)}, pos
