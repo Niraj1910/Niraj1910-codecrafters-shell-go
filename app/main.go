@@ -74,13 +74,16 @@ func (c *builtinCompleter) handleCompletions(compl []string, input string, pos i
 	sort.Strings(compl)
 
 	fmt.Print("\n")
+	output := ""
 	for i, c := range compl {
 		if i > 0 {
-			fmt.Print("  ")
+			output += " "
 		} else {
-			fmt.Print(c)
+			output += c
 		}
 	}
+
+	fmt.Print(output)
 
 	fmt.Print("\n$" + input)
 
