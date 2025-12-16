@@ -10,7 +10,10 @@ import (
 	"github.com/chzyer/readline"
 )
 
-type builtinCompleter struct{}
+type builtinCompleter struct {
+	lastInput string
+	tabCount  int
+}
 
 func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	input := string(line[:pos])
@@ -20,27 +23,65 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 		fmt.Print("\x07")
 		return nil, 0
 	}
+	compl := []string{}
+
 	builtins := []string{"echo", "exit"}
 
 	for _, cmd := range builtins {
 		if strings.HasPrefix(cmd, input) {
-			suffix := cmd[len(input):] + " "
-			return [][]rune{[]rune(suffix)}, pos
+			compl = append(compl, cmd)
 		}
 	}
 
 	// Executable completion
-
 	for _, execDir := range executablesInPATH() {
 
 		if strings.HasPrefix(execDir, input) {
-			suffix := execDir[len(input):] + " "
-			return [][]rune{[]rune(suffix)}, pos
+			compl = append(compl, execDir)
 		}
 	}
 
-	// invalid completeion -> ring bell
-	fmt.Print("\x07")
+	// --------- STATE MANAGEMENT ------------
+	if c.lastInput != input {
+		c.lastInput = input
+		c.tabCount = 1
+	} else {
+		c.tabCount++
+	}
+
+	return c.handleCompletions(compl, input, pos)
+}
+
+func (c *builtinCompleter) handleCompletions(compl []string, input string, pos int) ([][]rune, int) {
+
+	if len(compl) == 0 {
+		fmt.Print("\x07")
+		return nil, 0
+	}
+
+	if len(compl) == 1 {
+		suffix := compl[0][len(input):]
+		return [][]rune{[]rune(suffix)}, pos
+	}
+
+	// Multiple matches
+	if c.tabCount == 1 {
+		fmt.Print("\x07")
+		return nil, 0
+	}
+
+	// Second tab  -> print options
+	fmt.Print("\n")
+	for i, c := range compl {
+		if i > 0 {
+			fmt.Print("  ")
+		} else {
+			fmt.Print(c)
+		}
+	}
+
+	fmt.Print("\n$" + input)
+
 	return nil, 0
 }
 
