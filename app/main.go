@@ -28,6 +28,18 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 			return [][]rune{[]rune(suffix)}, pos
 		}
 	}
+
+	// Executable completion
+	path := os.Getenv("PATH")
+	dirs := strings.Split(path, ":")
+
+	for _, dir := range dirs {
+		if strings.HasPrefix(dir, input) {
+			suffix := dir[len(input):] + " "
+			return [][]rune{[]rune(suffix)}, pos
+		}
+	}
+
 	// invalid completeion -> ring bell
 	fmt.Print("\x07")
 	return nil, 0
@@ -370,8 +382,6 @@ func main() {
 				fmt.Println(command + ": command not found")
 				continue
 			}
-
-			// fmt.Print(arguments)
 
 			cmd := exec.Command(command, arguments...)
 			cmd.Stdin = os.Stdin
