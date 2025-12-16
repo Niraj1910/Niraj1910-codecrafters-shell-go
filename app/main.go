@@ -33,6 +33,8 @@ func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	path := os.Getenv("PATH")
 	dirs := strings.Split(path, ":")
 
+	fmt.Println("path -> ", path)
+
 	for _, dir := range dirs {
 
 		fmt.Println(dir)
