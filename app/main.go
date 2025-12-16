@@ -60,8 +60,17 @@ func (c *builtinCompleter) handleCompletions(compl []string, input string, pos i
 		return nil, 0
 	}
 
+	// Single match -> full completion
 	if len(compl) == 1 {
 		suffix := compl[0][len(input):] + " "
+		return [][]rune{[]rune(suffix)}, pos
+	}
+
+	// Multiple matches -> try LCP
+	lcp := longestCommonPrefix(compl)
+
+	if len(lcp) > len(input) {
+		suffix := lcp[len(input):]
 		return [][]rune{[]rune(suffix)}, pos
 	}
 
@@ -85,6 +94,26 @@ func (c *builtinCompleter) handleCompletions(compl []string, input string, pos i
 	fmt.Print("\n$ " + input)
 
 	return nil, 0
+}
+
+func longestCommonPrefix(strs []string) string {
+	if len(strs) == 0 {
+		return ""
+	}
+
+	prefix := strs[0]
+
+	for _, s := range strs[1:] {
+		i := 0
+		for i < len(prefix) && i < len(s) && prefix[i] == s[i] {
+			i++
+		}
+		prefix = prefix[:i]
+		if prefix == "" {
+			break
+		}
+	}
+	return prefix
 }
 
 func executablesInPATH() []string {
