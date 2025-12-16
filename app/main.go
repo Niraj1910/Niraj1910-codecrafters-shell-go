@@ -69,8 +69,6 @@ func (c *builtinCompleter) handleCompletions(compl []string, input string, pos i
 		return nil, 0
 	}
 
-	fmt.Println(compl)
-
 	// Second tab  -> print options
 	fmt.Print("\n")
 	for i, c := range compl {
