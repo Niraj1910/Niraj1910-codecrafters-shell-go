@@ -550,8 +550,8 @@ func runBuiltin(cmd string, args []string, stdin io.Reader, stdout io.Writer) {
 	}
 }
 
-func PrintHistory(historyList []string, n int) {
-	for i := 0; i < n; i++ {
+func PrintHistory(historyList []string, idx int) {
+	for i := idx; i < len(historyList); i++ {
 		h := historyList[i]
 		fmt.Printf("%d %s \n", i+1, h)
 	}
@@ -626,12 +626,13 @@ func main() {
 			continue
 
 		case "history":
-			n := len(cmdRecords.historyList)
+			idx := 0
 			if len(arguments) != 0 {
 				cmdRecords.lastNCmds, _ = strconv.Atoi(arguments[0])
+				idx = len(cmdRecords.historyList) - cmdRecords.lastNCmds
 			}
 
-			PrintHistory(cmdRecords.historyList, n)
+			PrintHistory(cmdRecords.historyList, idx)
 
 		case "exit":
 			return
