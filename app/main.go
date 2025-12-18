@@ -661,13 +661,11 @@ func main() {
 				switch arguments[0] {
 				case "-r":
 					loadHistoryFromFile(arguments[1], &cmdRecords)
+					continue
 
 				case "-w":
 					writeHistoryInFile(arguments[1], &cmdRecords)
-
-				default:
 					continue
-
 				}
 			}
 
