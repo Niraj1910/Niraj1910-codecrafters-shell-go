@@ -621,7 +621,7 @@ func main() {
 			for i, h := range cmdRecords.historyList {
 				fmt.Printf("%d %s \n", i+1, h)
 			}
-			fmt.Print("$ ")
+			fmt.Println(cmdRecords.historyList)
 
 		case "exit":
 			return
