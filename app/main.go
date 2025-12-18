@@ -368,11 +368,12 @@ func findExecutable(cmd string) (string, bool) {
 
 func isBuiltin(cmd string) bool {
 	builtins := map[string]bool{
-		"type": true,
-		"echo": true,
-		"exit": true,
-		"pwd":  true,
-		"cd":   true,
+		"type":    true,
+		"echo":    true,
+		"exit":    true,
+		"pwd":     true,
+		"cd":      true,
+		"history": true,
 	}
 	return builtins[cmd]
 }
