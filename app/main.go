@@ -17,6 +17,14 @@ type builtinCompleter struct {
 	tabCount  int
 }
 
+type historyKeeper struct {
+	historyList []string
+}
+
+func (h *historyKeeper) push(cmd string) {
+	h.historyList = append(h.historyList, cmd)
+}
+
 func (c *builtinCompleter) Do(line []rune, pos int) ([][]rune, int) {
 	input := string(line[:pos])
 
@@ -553,6 +561,9 @@ func main() {
 	}
 	defer rl.Close()
 
+	// initialise history
+	cmdRecords := historyKeeper{}
+
 	for {
 		line, err := rl.Readline()
 
@@ -564,6 +575,9 @@ func main() {
 		if line == "" {
 			continue
 		}
+
+		// append the cmd in the history
+		cmdRecords.push(line)
 
 		pipeline := splitPipeLine(line)
 		if len(pipeline) > 1 {
@@ -601,6 +615,12 @@ func main() {
 			dir := changeDirs(target)
 			fmt.Print(dir)
 			continue
+
+		case "history":
+			cmdRecords.push("history")
+			for i, h := range cmdRecords.historyList {
+				fmt.Printf("%d %s \n", i+1, h)
+			}
 
 		case "exit":
 			return
