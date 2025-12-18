@@ -419,66 +419,203 @@ func splitPipeLine(line string) []string {
 }
 
 func executePipeLine(parts []string) {
-	var prevRead *os.File
-	var cmds []*exec.Cmd
+	if len(parts) == 0 {
+		return
+	}
 
-	// First, create all commands
+	// For single command pipeline
+	if len(parts) == 1 {
+		// Just execute it normally
+		args, stdoutFile, stderrFile := parseTokens(parts[0])
+		if len(args) == 0 {
+			return
+		}
+		executeSingleCommand(args, stdoutFile, stderrFile)
+		return
+	}
+
+	// For multiple commands in pipeline
+	executeMultiCommandPipeline(parts)
+}
+
+func executeMultiCommandPipeline(parts []string) {
+	// var prevRead *os.File
+	var cmdReaders []*os.File
+	var cmdWriters []*os.File
+	var externalCmds []*exec.Cmd
+
+	// First pass: set up all pipes
+	for i := 0; i < len(parts)-1; i++ {
+		read, write, _ := os.Pipe()
+		cmdReaders = append(cmdReaders, read)
+		cmdWriters = append(cmdWriters, write)
+	}
+
+	// Execute each command
 	for i, part := range parts {
 		args, _, _ := parseTokens(part)
 		if len(args) == 0 {
 			continue
 		}
 
+		// Determine stdin
+		var stdin io.Reader = os.Stdin
+		if i > 0 && cmdReaders[i-1] != nil {
+			stdin = cmdReaders[i-1]
+		}
+
+		// Determine stdout
+		var stdout io.Writer = os.Stdout
+		if i < len(parts)-1 && cmdWriters[i] != nil {
+			stdout = cmdWriters[i]
+		}
+
 		if isBuiltin(args[0]) {
-			// For builtins, we'll handle them specially
-			if i == len(parts)-1 {
-				// Last command - execute builtin with proper I/O
-				runBuiltinInPipeline(args, prevRead, os.Stdout, os.Stderr)
-			} else {
-				// Middle command - need to create a pipe
-				read, write, _ := os.Pipe()
-				runBuiltinInPipeline(args, prevRead, write, os.Stderr)
-				write.Close()
-				prevRead = read
-			}
+			// Handle builtin
+			executeBuiltinInPipeline(args[0], args[1:], stdin, stdout)
 		} else {
-			// External command
+			// Handle external command
 			cmd := exec.Command(args[0], args[1:]...)
-			cmds = append(cmds, cmd)
-
-			// Set up stdin
-			if prevRead != nil {
-				cmd.Stdin = prevRead
-			} else {
-				cmd.Stdin = os.Stdin
-			}
-
-			// Set up stdout - create pipe if not last command
-			if i < len(parts)-1 {
-				read, write, _ := os.Pipe()
-				cmd.Stdout = write
-				prevRead = read
-			} else {
-				cmd.Stdout = os.Stdout
-			}
-
+			cmd.Stdin = stdin
+			cmd.Stdout = stdout
 			cmd.Stderr = os.Stderr
+			externalCmds = append(externalCmds, cmd)
+			cmd.Start()
 		}
 	}
 
-	// Start and wait for external commands
-	for _, cmd := range cmds {
-		cmd.Start()
+	// Close all write ends
+	for _, w := range cmdWriters {
+		if w != nil {
+			w.Close()
+		}
 	}
 
-	// Wait for all commands to finish
-	for _, cmd := range cmds {
+	// Wait for all external commands
+	for _, cmd := range externalCmds {
 		cmd.Wait()
 	}
 
-	// Close any remaining file descriptors
-	if prevRead != nil {
-		prevRead.Close()
+	// Close all read ends
+	for _, r := range cmdReaders {
+		if r != nil {
+			r.Close()
+		}
+	}
+}
+
+func executeBuiltinInPipeline(cmd string, args []string, stdin io.Reader, stdout io.Writer) {
+	// For type and echo, discard stdin
+	if cmd == "type" || cmd == "echo" {
+		io.Copy(io.Discard, stdin)
+	}
+
+	var output string
+	switch cmd {
+	case "echo":
+		output = strings.Join(args, " ") + "\n"
+	case "type":
+		if len(args) > 0 {
+			output = commandInfo(args[0]) + "\n"
+		}
+	case "pwd":
+		cwd, _ := os.Getwd()
+		output = cwd + "\n"
+	case "cd":
+		if len(args) > 0 {
+			output = changeDirs(args[0])
+		}
+	case "exit":
+		// Nothing to do in pipeline
+	}
+
+	if output != "" {
+		stdout.Write([]byte(output))
+	}
+}
+
+func executeSingleCommand(args []string, stdoutFile, stderrFile *os.File) {
+	defer func() {
+		if stdoutFile != nil {
+			stdoutFile.Close()
+		}
+		if stderrFile != nil {
+			stderrFile.Close()
+		}
+	}()
+
+	cmd := args[0]
+	arguments := args[1:]
+
+	switch cmd {
+	case "type":
+		if len(arguments) == 0 {
+			fmt.Println("type: missing argument")
+		} else {
+			output := commandInfo(arguments[0])
+			if stdoutFile != nil {
+				stdoutFile.Write([]byte(output + "\n"))
+			} else {
+				fmt.Println(output)
+			}
+		}
+
+	case "echo":
+		output := strings.Join(arguments, " ") + "\n"
+		if stdoutFile != nil {
+			stdoutFile.Write([]byte(output))
+		} else {
+			fmt.Print(output)
+		}
+
+	case "pwd":
+		cwd, _ := os.Getwd()
+		if stdoutFile != nil {
+			stdoutFile.Write([]byte(cwd + "\n"))
+		} else {
+			fmt.Println(cwd)
+		}
+
+	case "cd":
+		if len(arguments) == 0 {
+			// Go to home directory
+			output := changeDirs("~")
+			if output != "" {
+				fmt.Print(output)
+			}
+		} else {
+			output := changeDirs(arguments[0])
+			if output != "" {
+				fmt.Print(output)
+			}
+		}
+
+	case "exit":
+		os.Exit(0)
+
+	default:
+		_, found := findExecutable(cmd)
+		if !found {
+			fmt.Println(cmd + ": command not found")
+			return
+		}
+
+		execCmd := exec.Command(cmd, arguments...)
+		execCmd.Stdin = os.Stdin
+
+		if stdoutFile != nil {
+			execCmd.Stdout = stdoutFile
+		} else {
+			execCmd.Stdout = os.Stdout
+		}
+
+		if stderrFile != nil {
+			execCmd.Stderr = stderrFile
+		} else {
+			execCmd.Stderr = os.Stderr
+		}
+
+		execCmd.Run()
 	}
 }
 
