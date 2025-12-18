@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -366,91 +367,166 @@ func findExecutable(cmd string) (string, bool) {
 }
 
 func splitPipeLine(line string) []string {
-
 	var parts []string
 	var curr strings.Builder
 	inSingle := false
 	inDouble := false
+	escape := false
 
 	for i := 0; i < len(line); i++ {
 		ch := rune(line[i])
+
+		if escape {
+			curr.WriteRune(ch)
+			escape = false
+			continue
+		}
+
+		if ch == '\\' {
+			escape = true
+			curr.WriteRune(ch)
+			continue
+		}
 
 		switch ch {
 		case '\'':
 			if !inDouble {
 				inSingle = !inSingle
 			}
+			curr.WriteRune(ch)
 		case '"':
 			if !inSingle {
 				inDouble = !inDouble
 			}
+			curr.WriteRune(ch)
 		case '|':
 			if !inSingle && !inDouble {
 				parts = append(parts, strings.TrimSpace(curr.String()))
 				curr.Reset()
-				continue
+			} else {
+				curr.WriteRune(ch)
 			}
+		default:
+			curr.WriteRune(ch)
 		}
-		curr.WriteRune(ch)
 	}
 
 	if curr.Len() > 0 {
 		parts = append(parts, strings.TrimSpace(curr.String()))
-		curr.Reset()
 	}
 
 	return parts
 }
 
 func executePipeLine(parts []string) {
-	var cmds []*exec.Cmd
 	var prevRead *os.File
+	var cmds []*exec.Cmd
 
+	// First, create all commands
 	for i, part := range parts {
 		args, _, _ := parseTokens(part)
 		if len(args) == 0 {
-			return
+			continue
 		}
 
-		cmd := exec.Command(args[0], args[1:]...)
-
-		// stdin
-		if prevRead != nil {
-			cmd.Stdin = prevRead
+		if isBuiltin(args[0]) {
+			// For builtins, we'll handle them specially
+			if i == len(parts)-1 {
+				// Last command - execute builtin with proper I/O
+				runBuiltinInPipeline(args, prevRead, os.Stdout, os.Stderr)
+			} else {
+				// Middle command - need to create a pipe
+				read, write, _ := os.Pipe()
+				runBuiltinInPipeline(args, prevRead, write, os.Stderr)
+				write.Close()
+				prevRead = read
+			}
 		} else {
-			cmd.Stdin = os.Stdin
-		}
+			// External command
+			cmd := exec.Command(args[0], args[1:]...)
+			cmds = append(cmds, cmd)
 
-		// stdout
-		var readEnd, writeEnd *os.File
-		if i < len(parts)-1 {
-			readEnd, writeEnd, _ = os.Pipe()
-			cmd.Stdout = writeEnd
-		} else {
-			cmd.Stdout = os.Stdout
-		}
+			// Set up stdin
+			if prevRead != nil {
+				cmd.Stdin = prevRead
+			} else {
+				cmd.Stdin = os.Stdin
+			}
 
-		cmd.Stderr = os.Stderr
+			// Set up stdout - create pipe if not last command
+			if i < len(parts)-1 {
+				read, write, _ := os.Pipe()
+				cmd.Stdout = write
+				prevRead = read
+			} else {
+				cmd.Stdout = os.Stdout
+			}
 
-		if err := cmd.Start(); err != nil {
-			fmt.Println(err)
-			return
+			cmd.Stderr = os.Stderr
 		}
-
-		// 🔥 CRITICAL: parent must close unused fds
-		if prevRead != nil {
-			prevRead.Close()
-		}
-		if writeEnd != nil {
-			writeEnd.Close()
-		}
-
-		prevRead = readEnd
-		cmds = append(cmds, cmd)
 	}
 
+	// Start and wait for external commands
+	for _, cmd := range cmds {
+		cmd.Start()
+	}
+
+	// Wait for all commands to finish
 	for _, cmd := range cmds {
 		cmd.Wait()
+	}
+
+	// Close any remaining file descriptors
+	if prevRead != nil {
+		prevRead.Close()
+	}
+}
+
+func runBuiltinInPipeline(args []string, in *os.File, out *os.File, errOut *os.File) {
+	// Handle stdin if provided
+	if in != nil {
+		// For builtins in pipeline, they might need to process stdin
+		switch args[0] {
+		case "type":
+			// type command ignores stdin - it only cares about its argument
+			// Read and discard stdin to prevent it from being printed
+			io.Copy(io.Discard, in)
+		case "echo":
+			// echo also ignores stdin
+			io.Copy(io.Discard, in)
+		default:
+			// For other builtins, they might process stdin
+			// We'll implement as needed
+		}
+	}
+
+	var output string
+
+	switch args[0] {
+	case "echo":
+		output = strings.Join(args[1:], " ") + "\n"
+
+	case "type":
+		if len(args) > 1 {
+			output = commandInfo(args[1]) + "\n"
+		}
+
+	case "pwd":
+		cwd, _ := os.Getwd()
+		output = cwd + "\n"
+
+	case "cd":
+		if len(args) > 1 {
+			output = changeDirs(args[1])
+		}
+
+	case "exit":
+		// In pipeline, exit might not make sense, but we handle it
+		output = ""
+	}
+
+	if out != nil {
+		out.Write([]byte(output))
 	}
 }
 
