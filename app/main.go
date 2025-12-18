@@ -575,15 +575,19 @@ func loadHistoryFromFile(path string, h *historyKeeper) error {
 }
 
 func writeHistoryInFile(path string, h *historyKeeper) {
-	// os.openFile with os.O_CREATE flag gurantees, if the file exist -> opens it or if it doesn't exist -> create it
-	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	file, err := os.OpenFile(
+		path,
+		os.O_CREATE|os.O_WRONLY|os.O_TRUNC,
+		0644,
+	)
 	if err != nil {
-		fmt.Printf("History: cannot write to file: %v\n", err)
+		fmt.Printf("history: cannot write file: %v\n", err)
+		return
 	}
 	defer file.Close()
 
 	for _, cmd := range h.historyList {
-		file.WriteString(cmd + "\n")
+		fmt.Fprintln(file, cmd)
 	}
 }
 
