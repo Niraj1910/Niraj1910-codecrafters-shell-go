@@ -666,6 +666,9 @@ func main() {
 				case "-w":
 					writeHistoryInFile(arguments[1], &cmdRecords)
 					continue
+				case "-a":
+					writeHistoryInFile(arguments[1], &cmdRecords)
+					continue
 				}
 			}
 
