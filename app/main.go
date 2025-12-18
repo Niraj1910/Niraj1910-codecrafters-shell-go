@@ -646,13 +646,16 @@ func main() {
 			// history -r <file>
 			if len(arguments) == 2 && arguments[0] == "-r" {
 				loadHistoryFromFile(arguments[1], &cmdRecords)
+				continue
 			}
 
 			// history N
 			idx := 0
 			if len(arguments) == 1 {
-				cmdRecords.lastNCmds, _ = strconv.Atoi(arguments[0])
-				idx = len(cmdRecords.historyList) - cmdRecords.lastNCmds
+				n, err := strconv.Atoi(arguments[0])
+				if err == nil && n < len(cmdRecords.historyList) {
+					idx = len(cmdRecords.historyList) - n
+				}
 			}
 
 			PrintHistory(cmdRecords.historyList, idx)
