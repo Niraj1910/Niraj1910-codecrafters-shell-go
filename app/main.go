@@ -19,8 +19,8 @@ type builtinCompleter struct {
 }
 
 type historyKeeper struct {
-	historyList []string
-	lastNCmds   int
+	historyList  []string
+	lastAppended int
 }
 
 func (h *historyKeeper) push(cmd string) {
@@ -587,6 +587,19 @@ func writeHistoryInFile(path string, h *historyKeeper) {
 	}
 }
 
+func appendHistoryToFile(path string, h *historyKeeper) {
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+	if err != nil {
+		fmt.Printf("History: cannot write to file: %v\n", err)
+	}
+	defer file.Close()
+
+	for i := h.lastAppended; i < len(h.historyList); i++ {
+		file.WriteString(h.historyList[i] + "\n")
+	}
+	h.lastAppended = len(h.historyList)
+}
+
 func main() {
 
 	cfg := readline.Config{
@@ -666,8 +679,9 @@ func main() {
 				case "-w":
 					writeHistoryInFile(arguments[1], &cmdRecords)
 					continue
+
 				case "-a":
-					writeHistoryInFile(arguments[1], &cmdRecords)
+					appendHistoryToFile(arguments[1], &cmdRecords)
 					continue
 				}
 			}
