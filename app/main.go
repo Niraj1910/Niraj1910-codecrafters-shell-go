@@ -703,10 +703,8 @@ func main() {
 			PrintHistory(cmdRecords.historyList, idx)
 
 		case "exit":
-			histFile := os.Getenv("HISTFILE")
 			if histFile != "" {
-				loadHistoryFromFile(histFile, &cmdRecords)
-				cmdRecords.lastAppended = len(cmdRecords.historyList)
+				writeHistoryInFile(histFile, &cmdRecords)
 			}
 			return
 
