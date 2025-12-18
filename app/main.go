@@ -365,6 +365,91 @@ func findExecutable(cmd string) (string, bool) {
 	return "", false
 }
 
+func splitPipeLine(line string) []string {
+
+	var parts []string
+	var curr strings.Builder
+	inSingle := false
+	inDouble := false
+
+	for i := 0; i < len(line); i++ {
+		ch := rune(line[i])
+
+		switch ch {
+		case '\'':
+			if !inDouble {
+				inSingle = !inSingle
+			}
+		case '"':
+			if !inSingle {
+				inDouble = !inDouble
+			}
+		case '|':
+			if !inSingle && !inDouble {
+				parts = append(parts, strings.TrimSpace(curr.String()))
+				curr.Reset()
+				continue
+			}
+		}
+		curr.WriteRune(ch)
+	}
+
+	if curr.Len() > 0 {
+		parts = append(parts, strings.TrimSpace(curr.String()))
+		curr.Reset()
+	}
+
+	return parts
+}
+
+func executePipeLine(parts []string) {
+
+	var cmds []*exec.Cmd
+	var prevStdout *os.File
+
+	for i, part := range parts {
+
+		args, _, _ := parseTokens(part)
+		if len(args) < 0 {
+			return
+		}
+
+		cmd := exec.Command(args[0], args[1:]...)
+
+		// stdin
+		if i == 0 {
+			cmd.Stdin = os.Stdin
+		} else {
+			cmd.Stdin = prevStdout
+		}
+
+		//stdout
+		if i < len(parts)-1 {
+			r, w, _ := os.Pipe()
+			cmd.Stdout = w
+			prevStdout = r
+		} else {
+			cmd.Stdout = os.Stdout
+		}
+
+		cmd.Stderr = os.Stderr
+		cmds = append(cmds, cmd)
+	}
+
+	// start all
+	for _, cmd := range cmds {
+		if err := cmd.Start(); err != nil {
+			fmt.Println(err)
+			return
+		}
+	}
+
+	// wait all
+	for _, cmd := range cmds {
+		cmd.Wait()
+	}
+}
+
 func isBuiltin(cmd string) bool {
 	builtins := map[string]bool{
 		"type": true,
@@ -443,6 +528,12 @@ func main() {
 		}
 		line = strings.TrimSpace(line)
 		if line == "" {
+			continue
+		}
+
+		pipeline := splitPipeLine(line)
+		if len(pipeline) > 1 {
+			executePipeLine(pipeline)
 			continue
 		}
 
