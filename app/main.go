@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"path/filepath"
 	"sort"
+	"strconv"
 	"strings"
 
 	"github.com/chzyer/readline"
@@ -19,6 +20,7 @@ type builtinCompleter struct {
 
 type historyKeeper struct {
 	historyList []string
+	lastNCmds   int
 }
 
 func (h *historyKeeper) push(cmd string) {
@@ -548,6 +550,13 @@ func runBuiltin(cmd string, args []string, stdin io.Reader, stdout io.Writer) {
 	}
 }
 
+func PrintHistory(historyList []string, n int) {
+	for i := 0; i < n; i++ {
+		h := historyList[i]
+		fmt.Printf("%d %s \n", i+1, h)
+	}
+}
+
 func main() {
 
 	cfg := readline.Config{
@@ -617,10 +626,12 @@ func main() {
 			continue
 
 		case "history":
-
-			for i, h := range cmdRecords.historyList {
-				fmt.Printf("%d %s \n", i+1, h)
+			n := len(cmdRecords.historyList)
+			if len(arguments) != 0 {
+				cmdRecords.lastNCmds, _ = strconv.Atoi(arguments[0])
 			}
+
+			PrintHistory(cmdRecords.historyList, n)
 
 		case "exit":
 			return
