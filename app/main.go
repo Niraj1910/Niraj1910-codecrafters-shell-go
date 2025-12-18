@@ -557,6 +557,23 @@ func PrintHistory(historyList []string, idx int) {
 	}
 }
 
+func loadHistoryFromFile(path string, h *historyKeeper) error {
+	data, err := os.ReadFile(path)
+	if err != nil {
+		return err
+	}
+
+	lines := strings.Split(string(data), "\n")
+	for _, line := range lines {
+		line = strings.TrimSpace(line)
+		if line == "" {
+			continue
+		}
+		h.push(line)
+	}
+	return nil
+}
+
 func main() {
 
 	cfg := readline.Config{
@@ -626,8 +643,14 @@ func main() {
 			continue
 
 		case "history":
+			// history -r <file>
+			if len(arguments) == 2 && arguments[0] == "-r" {
+				loadHistoryFromFile(arguments[1], &cmdRecords)
+			}
+
+			// history N
 			idx := 0
-			if len(arguments) != 0 {
+			if len(arguments) == 1 {
 				cmdRecords.lastNCmds, _ = strconv.Atoi(arguments[0])
 				idx = len(cmdRecords.historyList) - cmdRecords.lastNCmds
 			}
