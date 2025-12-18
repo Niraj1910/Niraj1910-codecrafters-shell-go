@@ -405,7 +405,7 @@ func splitPipeLine(line string) []string {
 func executePipeLine(parts []string) {
 
 	var cmds []*exec.Cmd
-	var prevStdout *os.File
+	var prevRead *os.File
 
 	for i, part := range parts {
 
@@ -420,20 +420,35 @@ func executePipeLine(parts []string) {
 		if i == 0 {
 			cmd.Stdin = os.Stdin
 		} else {
-			cmd.Stdin = prevStdout
+			cmd.Stdin = prevRead
 		}
 
-		//stdout
+		// stdout
+		var nextRead *os.File
 		if i < len(parts)-1 {
-			r, w, _ := os.Pipe()
+			r, w, err := os.Pipe()
+			if err != nil {
+				fmt.Println(err)
+				return
+			}
 			cmd.Stdout = w
-			prevStdout = r
+			nextRead = r
 		} else {
 			cmd.Stdout = os.Stdout
 		}
 
 		cmd.Stderr = os.Stderr
 		cmds = append(cmds, cmd)
+
+		// CRITICAL: close unused FDs in parent
+		if prevRead != nil {
+			prevRead.Close()
+		}
+		if i < len(parts)-1 {
+			cmd.Stdout.(*os.File).Close()
+		}
+
+		prevRead = nextRead
 	}
 
 	// start all
