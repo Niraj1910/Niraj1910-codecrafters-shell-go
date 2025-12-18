@@ -574,6 +574,19 @@ func loadHistoryFromFile(path string, h *historyKeeper) error {
 	return nil
 }
 
+func writeHistoryInFile(path string, h *historyKeeper) {
+	// os.openFile with os.O_CREATE flag gurantees, if the file exist -> opens it or if it doesn't exist -> create it
+	file, err := os.OpenFile(path, os.O_CREATE|os.O_WRONLY|os.O_TRUNC, 0644)
+	if err != nil {
+		fmt.Printf("History: cannot write to file: %v\n", err)
+	}
+	defer file.Close()
+
+	for _, cmd := range h.historyList {
+		file.WriteString(cmd + "\n")
+	}
+}
+
 func main() {
 
 	cfg := readline.Config{
@@ -644,9 +657,18 @@ func main() {
 
 		case "history":
 			// history -r <file>
-			if len(arguments) == 2 && arguments[0] == "-r" {
-				loadHistoryFromFile(arguments[1], &cmdRecords)
-				continue
+			if len(arguments) == 2 {
+				switch arguments[0] {
+				case "-r":
+					loadHistoryFromFile(arguments[1], &cmdRecords)
+
+				case "-w":
+					writeHistoryInFile(arguments[1], &cmdRecords)
+
+				default:
+					continue
+
+				}
 			}
 
 			// history N
