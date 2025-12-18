@@ -461,6 +461,7 @@ func splitPipeLine(line string) []string {
 
 func executePipeLine(parts []string) {
 	var prevRead *os.File
+	var cmds []*exec.Cmd
 
 	for i, part := range parts {
 		args, _, _ := parseTokens(part)
@@ -475,7 +476,6 @@ func executePipeLine(parts []string) {
 			readEnd, writeEnd, _ = os.Pipe()
 		}
 
-		// BUILTIN
 		if isBuiltin(args[0]) {
 			stdin := os.Stdin
 			if prevRead != nil {
@@ -494,8 +494,6 @@ func executePipeLine(parts []string) {
 
 			if prevRead != nil {
 				cmd.Stdin = prevRead
-			} else {
-				cmd.Stdin = os.Stdin
 			}
 
 			if writeEnd != nil {
@@ -506,7 +504,7 @@ func executePipeLine(parts []string) {
 
 			cmd.Stderr = os.Stderr
 			cmd.Start()
-			cmd.Wait()
+			cmds = append(cmds, cmd)
 		}
 
 		if prevRead != nil {
@@ -517,6 +515,11 @@ func executePipeLine(parts []string) {
 		}
 
 		prevRead = readEnd
+	}
+
+	// WAIT ONLY AFTER ALL COMMANDS START
+	for _, cmd := range cmds {
+		cmd.Wait()
 	}
 }
 
