@@ -403,63 +403,52 @@ func splitPipeLine(line string) []string {
 }
 
 func executePipeLine(parts []string) {
-
 	var cmds []*exec.Cmd
 	var prevRead *os.File
 
 	for i, part := range parts {
-
 		args, _, _ := parseTokens(part)
-		if len(args) < 0 {
+		if len(args) == 0 {
 			return
 		}
 
 		cmd := exec.Command(args[0], args[1:]...)
 
 		// stdin
-		if i == 0 {
-			cmd.Stdin = os.Stdin
-		} else {
+		if prevRead != nil {
 			cmd.Stdin = prevRead
+		} else {
+			cmd.Stdin = os.Stdin
 		}
 
 		// stdout
-		var nextRead *os.File
+		var readEnd, writeEnd *os.File
 		if i < len(parts)-1 {
-			r, w, err := os.Pipe()
-			if err != nil {
-				fmt.Println(err)
-				return
-			}
-			cmd.Stdout = w
-			nextRead = r
+			readEnd, writeEnd, _ = os.Pipe()
+			cmd.Stdout = writeEnd
 		} else {
 			cmd.Stdout = os.Stdout
 		}
 
 		cmd.Stderr = os.Stderr
-		cmds = append(cmds, cmd)
 
-		// CRITICAL: close unused FDs in parent
-		if prevRead != nil {
-			prevRead.Close()
-		}
-		if i < len(parts)-1 {
-			cmd.Stdout.(*os.File).Close()
-		}
-
-		prevRead = nextRead
-	}
-
-	// start all
-	for _, cmd := range cmds {
 		if err := cmd.Start(); err != nil {
 			fmt.Println(err)
 			return
 		}
+
+		// 🔥 CRITICAL: parent must close unused fds
+		if prevRead != nil {
+			prevRead.Close()
+		}
+		if writeEnd != nil {
+			writeEnd.Close()
+		}
+
+		prevRead = readEnd
+		cmds = append(cmds, cmd)
 	}
 
-	// wait all
 	for _, cmd := range cmds {
 		cmd.Wait()
 	}
