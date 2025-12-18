@@ -615,6 +615,11 @@ func main() {
 
 	// initialise history
 	cmdRecords := historyKeeper{}
+	histFile := os.Getenv("HISTFILE")
+	if histFile != "" {
+		loadHistoryFromFile(histFile, &cmdRecords)
+		cmdRecords.lastAppended = len(cmdRecords.historyList)
+	}
 
 	for {
 		line, err := rl.Readline()
