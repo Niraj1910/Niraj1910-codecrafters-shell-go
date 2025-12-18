@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -459,7 +460,6 @@ func splitPipeLine(line string) []string {
 }
 
 func executePipeLine(parts []string) {
-	var cmds []*exec.Cmd
 	var prevRead *os.File
 
 	for i, part := range parts {
@@ -468,32 +468,47 @@ func executePipeLine(parts []string) {
 			return
 		}
 
-		cmd := exec.Command(args[0], args[1:]...)
-
-		// stdin
-		if prevRead != nil {
-			cmd.Stdin = prevRead
-		} else {
-			cmd.Stdin = os.Stdin
-		}
-
-		// stdout
+		isLast := i == len(parts)-1
 		var readEnd, writeEnd *os.File
-		if i < len(parts)-1 {
+
+		if !isLast {
 			readEnd, writeEnd, _ = os.Pipe()
-			cmd.Stdout = writeEnd
+		}
+
+		// BUILTIN
+		if isBuiltin(args[0]) {
+			stdin := os.Stdin
+			if prevRead != nil {
+				stdin = prevRead
+			}
+
+			stdout := os.Stdout
+			if writeEnd != nil {
+				stdout = writeEnd
+			}
+
+			runBuiltin(args[0], args[1:], stdin, stdout)
+
 		} else {
-			cmd.Stdout = os.Stdout
+			cmd := exec.Command(args[0], args[1:]...)
+
+			if prevRead != nil {
+				cmd.Stdin = prevRead
+			} else {
+				cmd.Stdin = os.Stdin
+			}
+
+			if writeEnd != nil {
+				cmd.Stdout = writeEnd
+			} else {
+				cmd.Stdout = os.Stdout
+			}
+
+			cmd.Stderr = os.Stderr
+			cmd.Start()
+			cmd.Wait()
 		}
 
-		cmd.Stderr = os.Stderr
-
-		if err := cmd.Start(); err != nil {
-			fmt.Println(err)
-			return
-		}
-
-		// CRITICAL: parent must close unused fds
 		if prevRead != nil {
 			prevRead.Close()
 		}
@@ -502,11 +517,22 @@ func executePipeLine(parts []string) {
 		}
 
 		prevRead = readEnd
-		cmds = append(cmds, cmd)
 	}
+}
 
-	for _, cmd := range cmds {
-		cmd.Wait()
+func runBuiltin(cmd string, args []string, stdin io.Reader, stdout io.Writer) {
+	switch cmd {
+	case "echo":
+		fmt.Fprintln(stdout, strings.Join(args, " "))
+
+	case "type":
+		if len(args) > 0 {
+			fmt.Fprintln(stdout, commandInfo(args[0]))
+		}
+
+	case "pwd":
+		cwd, _ := os.Getwd()
+		fmt.Fprintln(stdout, cwd)
 	}
 }
 
