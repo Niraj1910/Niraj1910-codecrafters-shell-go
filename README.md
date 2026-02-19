@@ -106,6 +106,8 @@ Commands are parsed and executed with pipe chaining.
 
 # Architecture Overview
 
+![GoShell Architecture](./GoShell-diagram.png)
+
 **Core components:**
 
 - REPL loop with readline
