@@ -46,24 +46,29 @@ go run app/main.go
 
 # Built-in Commands
 
-*Command*	   *Description*
-`cd <dir>`	   Change working directory
-`pwd`	         Print current working directory
-`echo`	      Print arguments
-`type <cmd>`	Check if command is builtin or external
-`history`	   Display command history
-`exit`	      Exit shell (persists history)
-
+```sh
+Command	       Description
+cd <dir>	      #Change working directory
+pwd	         #Print current working directory
+echo	         #Print arguments
+type <cmd>	   #Check if command is builtin or external
+history	      #Display command history
+exit	         #Exit shell (persists history)
+```
 
 # Command History (File-backed)
 
 **Supports advanced history operations:**
 
-`history`                # show all history
-`history 10`             # last 10 commands
-`history -r file.txt`    # load history
-`history -w file.txt`    # overwrite history file
-`history -a file.txt`    # append new commands
+```sh
+
+history                # show all history
+history 10             # last 10 commands
+history -r file.txt    # load history
+history -w file.txt    # overwrite history file
+history -a file.txt    # append new commands
+
+```
 
 **Persistent history using environment variable:**
 
