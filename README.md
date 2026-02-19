@@ -9,8 +9,8 @@ This project demonstrates `process execution`, `command parsing`, `I/O redirecti
 **Pull and run instantly:**
 
 ```sh
-docker pull niraj1910/codecrafters-shell:latest
-docker run -it niraj1910/codecrafters-shell:latest
+docker pull niraj1910/codecrafters-shell:v1.0
+docker run -it niraj1910/codecrafters-shell:v1.0
 ```
 
 **Or build locally:**
