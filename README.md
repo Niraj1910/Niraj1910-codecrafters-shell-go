@@ -16,8 +16,8 @@ docker run -it niraj1910/codecrafters-shell:latest
 **Or build locally:**
 
 ```sh
-git clone <your-repo-url>
-cd <repo>
+git clone https://github.com/Niraj1910/Niraj1910-codecrafters-shell-go.git GoShell
+cd ./GoShell
 
 docker build -t goshell .
 docker run -it goshell
